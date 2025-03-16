@@ -106,10 +106,17 @@ export const getDriverStandings = async (season = new Date().getFullYear()) => {
 export const getRaceSchedule = async (season = new Date().getFullYear()) => {
   try {
     console.log(`Fetching race schedule from Jolpica API for season ${season}`);
+    console.log(`API URL: ${JOLPICA_BASE_URL}/f1/${season}.json`);
     const timestamp = new Date().getTime();
 
     // Get the race schedule for the season
     const response = await jolpicaInstance.get(`f1/${season}.json`);
+
+    console.log(
+      "Race schedule API response:",
+      response.status,
+      response.statusText
+    );
 
     if (
       response.data &&
@@ -155,7 +162,14 @@ export const getRaceSchedule = async (season = new Date().getFullYear()) => {
       }
     }
   } catch (error) {
-    console.error("Error fetching race schedule from Jolpica API:", error);
+    console.error("Error fetching race schedule:", error);
+    console.error("Error details:", {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: `${JOLPICA_BASE_URL}/f1/${season}.json`,
+      data: error.response?.data,
+    });
 
     // Try previous season if we're looking at current year
     if (season === new Date().getFullYear()) {
