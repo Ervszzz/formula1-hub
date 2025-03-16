@@ -109,23 +109,31 @@ export const getRaceSchedule = async (season = new Date().getFullYear()) => {
     console.log(`API URL: ${JOLPICA_BASE_URL}/f1/${season}.json`);
     const timestamp = new Date().getTime();
 
-    // Get the race schedule for the season
-    const response = await jolpicaInstance.get(`f1/${season}.json`);
+    // Create a direct URL for debugging
+    const directUrl = `${window.location.origin}/api/jolpica/f1/${season}.json`;
+    console.log(`Trying direct URL: ${directUrl}`);
 
+    // Try using fetch directly instead of axios
+    const fetchResponse = await fetch(directUrl);
+    if (!fetchResponse.ok) {
+      throw new Error(`HTTP error! status: ${fetchResponse.status}`);
+    }
+
+    const responseData = await fetchResponse.json();
     console.log(
       "Race schedule API response:",
-      response.status,
-      response.statusText
+      fetchResponse.status,
+      fetchResponse.statusText
     );
 
     if (
-      response.data &&
-      response.data.MRData &&
-      response.data.MRData.RaceTable &&
-      response.data.MRData.RaceTable.Races &&
-      response.data.MRData.RaceTable.Races.length > 0
+      responseData &&
+      responseData.MRData &&
+      responseData.MRData.RaceTable &&
+      responseData.MRData.RaceTable.Races &&
+      responseData.MRData.RaceTable.Races.length > 0
     ) {
-      const races = response.data.MRData.RaceTable.Races;
+      const races = responseData.MRData.RaceTable.Races;
 
       console.log(
         `Successfully fetched ${races.length} races for season ${season}`
@@ -149,7 +157,7 @@ export const getRaceSchedule = async (season = new Date().getFullYear()) => {
         _timestamp: timestamp,
       }));
     } else {
-      console.log("No race schedule data found in Jolpica API response");
+      console.log("No race schedule data found in API response");
 
       // Try previous season if we're looking at current year
       if (season === new Date().getFullYear()) {
@@ -157,7 +165,6 @@ export const getRaceSchedule = async (season = new Date().getFullYear()) => {
         const previousYear = season - 1;
         return await getRaceSchedule(previousYear);
       } else {
-        console.log("No data available for season", season);
         return "No Data Fetched";
       }
     }
