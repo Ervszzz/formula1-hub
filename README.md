@@ -16,7 +16,7 @@ A React-based web application that displays Formula 1 data including driver stan
 - React.js
 - Tailwind CSS
 - Vite
-- Ergast F1 API (via Jolpica API proxy)
+- Jolpica API (Ergast F1 API proxy)
 
 ## Getting Started
 
