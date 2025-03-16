@@ -142,8 +142,14 @@ export const getRaceSchedule = async (season = new Date().getFullYear()) => {
           `Successfully fetched ${races.length} races for season ${season}`
         );
 
+        // Log the first race to see its structure
+        console.log(
+          "First race data structure:",
+          JSON.stringify(races[0], null, 2)
+        );
+
         // Transform to match our expected format
-        return races.map((race) => ({
+        const transformedRaces = races.map((race) => ({
           season: parseInt(race.season),
           round: parseInt(race.round),
           raceName: race.raceName,
@@ -159,6 +165,14 @@ export const getRaceSchedule = async (season = new Date().getFullYear()) => {
           },
           _timestamp: timestamp,
         }));
+
+        // Log the first transformed race
+        console.log(
+          "First transformed race:",
+          JSON.stringify(transformedRaces[0], null, 2)
+        );
+
+        return transformedRaces;
       }
     } catch (axiosError) {
       console.log(
@@ -202,8 +216,14 @@ export const getRaceSchedule = async (season = new Date().getFullYear()) => {
         `Successfully fetched ${races.length} races for season ${season} with fetch`
       );
 
+      // Log the first race to see its structure
+      console.log(
+        "First race data structure (fetch):",
+        JSON.stringify(races[0], null, 2)
+      );
+
       // Transform to match our expected format
-      return races.map((race) => ({
+      const transformedRaces = races.map((race) => ({
         season: parseInt(race.season),
         round: parseInt(race.round),
         raceName: race.raceName,
@@ -219,6 +239,14 @@ export const getRaceSchedule = async (season = new Date().getFullYear()) => {
         },
         _timestamp: timestamp,
       }));
+
+      // Log the first transformed race
+      console.log(
+        "First transformed race (fetch):",
+        JSON.stringify(transformedRaces[0], null, 2)
+      );
+
+      return transformedRaces;
     } else {
       console.log("No race schedule data found in API response");
 

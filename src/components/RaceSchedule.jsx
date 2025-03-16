@@ -30,8 +30,33 @@ const RaceSchedule = () => {
         console.log("No data fetched from API");
         setError("No Data Fetched");
         setRaces([]);
-      } else if (data && data.length > 0) {
+      } else if (data && Array.isArray(data) && data.length > 0) {
         console.log(`Received ${data.length} races, first race:`, data[0]);
+
+        // Verify that the data has the expected structure
+        const hasValidStructure = data.every(
+          (race) =>
+            race &&
+            race.season &&
+            race.round &&
+            race.raceName &&
+            race.date &&
+            race.Circuit &&
+            race.Circuit.circuitName &&
+            race.Circuit.Location &&
+            race.Circuit.Location.locality &&
+            race.Circuit.Location.country
+        );
+
+        if (!hasValidStructure) {
+          console.error("Race data has invalid structure:", data[0]);
+          setError("Invalid data structure");
+          setRaces([]);
+          setLoading(false);
+          setIsRefreshing(false);
+          return;
+        }
+
         // The OpenF1 API already returns dates in the correct format
         // and our service handles year adjustments, so we can use the data directly
         setRaces(data);
@@ -49,6 +74,7 @@ const RaceSchedule = () => {
         setLastUpdated(new Date());
       } else {
         console.warn("No race schedule data returned or empty array");
+        console.warn("Data received:", data);
         setError("No data fetched");
         setRaces([]);
       }
