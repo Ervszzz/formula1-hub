@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/jolpica/:path*",
-      "destination": "https://jolpica.com/api/:path*"
+      "destination": "https://api.jolpica.com/:path*"
     }
   ],
   "headers": [

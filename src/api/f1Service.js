@@ -17,7 +17,7 @@ export const getDriverStandings = async (season = new Date().getFullYear()) => {
 
     // Use the Ergast-compatible endpoint format
     const response = await jolpicaInstance.get(
-      `/ergast/f1/${season}/driverStandings.json`
+      `ergast/f1/${season}/driverStandings.json`
     );
 
     console.log(
