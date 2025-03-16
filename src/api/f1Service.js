@@ -1,7 +1,18 @@
 import axios from "axios";
 
-// Jolpica API (Ergast replacement) for F1 data
-const JOLPICA_BASE_URL = "/api/jolpica";
+// Determine if we're in development or production
+const isDevelopment =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1";
+
+// Use direct Ergast API for local development, proxy for production
+const JOLPICA_BASE_URL = isDevelopment
+  ? "https://ergast.com/api"
+  : "/api/jolpica";
+
+console.log(
+  `Using API base URL: ${JOLPICA_BASE_URL} (isDevelopment: ${isDevelopment})`
+);
 
 const jolpicaInstance = axios.create({
   baseURL: JOLPICA_BASE_URL,
@@ -158,7 +169,12 @@ export const getRaceSchedule = async (season = new Date().getFullYear()) => {
 
     // If axios fails, try with fetch as a fallback
     console.log("Trying with fetch API as fallback");
-    const directUrl = `${window.location.origin}/api/jolpica/f1/${season}.json`;
+
+    // Use direct URL for development, proxied URL for production
+    const directUrl = isDevelopment
+      ? `https://ergast.com/api/f1/${season}.json`
+      : `${window.location.origin}/api/jolpica/f1/${season}.json`;
+
     console.log(`Direct URL: ${directUrl}`);
 
     const fetchResponse = await fetch(directUrl);
