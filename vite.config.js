@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api/jolpica": {
-        target: "https://api.jolpi.ca",
+        target: "https://ergast.com/api",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/jolpica/, ""),
         secure: true,
