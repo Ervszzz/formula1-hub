@@ -48,24 +48,63 @@ const teamColors = {
   March: "bg-green-200",
   Fondmetal: "bg-teal-200",
   Coloni: "bg-yellow-300",
-  Ligier: "bg-blue-200",
-  Dallara: "bg-red-900",
-  Osella: "bg-red-700",
-  "Leyton House": "bg-teal-100",
-  Eurobrun: "bg-orange-300",
-  Lotus: "bg-black",
-  Alfa: "bg-red-800",
-  RB: "bg-blue-800",
-  Haas: "bg-gray-500",
-  VCARB: "bg-blue-600",
-  "Racing Bulls": "bg-blue-600",
-  "Visa Cash App RB": "bg-blue-600",
-  "Stake F1 Team": "bg-red-800",
-  "Stake F1": "bg-red-800",
+};
+
+// Text color mapping
+const teamTextColors = {
+  "Red Bull": "text-blue-800",
+  Ferrari: "text-red-600",
+  Mercedes: "text-teal-500",
+  McLaren: "text-orange-500",
+  "Aston Martin": "text-green-600",
+  Alpine: "text-blue-500",
+  Williams: "text-blue-700",
+  AlphaTauri: "text-navy-500",
+  "Alfa Romeo": "text-red-800",
+  "Haas F1 Team": "text-gray-500",
+  "Racing Point": "text-pink-500",
+  Renault: "text-yellow-500",
+  "Toro Rosso": "text-blue-600",
+  Sauber: "text-red-700",
+  "Force India": "text-pink-600",
+  "Lotus F1": "text-black",
+  Marussia: "text-red-500",
+  Caterham: "text-green-500",
+  HRT: "text-gray-600",
+  Virgin: "text-red-400",
+  "Brawn GP": "text-green-400",
+  Toyota: "text-red-300",
+  "Super Aguri": "text-white",
+  Spyker: "text-orange-600",
+  Midland: "text-red-200",
+  Minardi: "text-black",
+  Jaguar: "text-green-700",
+  BAR: "text-white",
+  Jordan: "text-yellow-600",
+  Arrows: "text-orange-700",
+  Prost: "text-blue-400",
+  Benetton: "text-green-300",
+  Stewart: "text-white",
+  Tyrrell: "text-blue-300",
+  Lola: "text-red-100",
+  Forti: "text-yellow-700",
+  Simtek: "text-purple-500",
+  Pacific: "text-teal-400",
+  Larrousse: "text-yellow-400",
+  Footwork: "text-white",
+  Brabham: "text-teal-300",
+  "Andrea Moda": "text-black",
+  March: "text-green-200",
+  Fondmetal: "text-teal-200",
+  Coloni: "text-yellow-300",
 };
 
 const getTeamColor = (teamName) => {
-  return teamColors[teamName] || "bg-gray-700";
+  return teamColors[teamName] || "bg-gray-500";
+};
+
+const getTeamTextColor = (teamName) => {
+  return teamTextColors[teamName] || "text-gray-500";
 };
 
 const LastRaceResults = () => {
@@ -73,6 +112,9 @@ const LastRaceResults = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [viewAll, setViewAll] = useState(false);
+  const [showAllPositions, setShowAllPositions] = useState(false);
+  const [showAllDriversInPositions, setShowAllDriversInPositions] =
+    useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -124,13 +166,6 @@ const LastRaceResults = () => {
 
   useEffect(() => {
     fetchResults();
-
-    // Set up an interval to check for updates every 5 minutes
-    const intervalId = setInterval(() => {
-      fetchResults(true);
-    }, 5 * 60 * 1000);
-
-    return () => clearInterval(intervalId);
   }, []);
 
   const handleRefresh = () => {
@@ -139,13 +174,13 @@ const LastRaceResults = () => {
 
   if (loading)
     return (
-      <div className="flex justify-center items-center py-20">
-        <div className="relative w-16 h-16">
-          <div className="absolute top-0 left-0 w-full h-full border-2 border-red-500/50 rounded-sm opacity-25 animate-ping"></div>
-          <div className="absolute top-0 left-0 w-full h-full border-2 border-t-transparent border-red-500 rounded-sm animate-spin"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="tech-text text-red-500 text-xs">LOADING</span>
-          </div>
+      <div className="tech-card p-6 tech-corner animate-pulse">
+        <div className="h-6 bg-gray-700 rounded w-1/3 mb-4"></div>
+        <div className="h-4 bg-gray-700 rounded w-1/4 mb-6"></div>
+        <div className="space-y-3">
+          <div className="h-10 bg-gray-700 rounded"></div>
+          <div className="h-10 bg-gray-700 rounded"></div>
+          <div className="h-10 bg-gray-700 rounded"></div>
         </div>
       </div>
     );
@@ -255,61 +290,66 @@ const LastRaceResults = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="tech-card tech-corner tech-scan p-6">
-          <div className="tech-text text-xs text-red-500 tracking-wider mb-1">
+          <div className="tech-text text-xs text-red-500 tracking-wider mb-4">
             RACE WINNER
           </div>
-          <div className="flex items-center mb-4">
-            <div className="w-12 h-12 border border-red-500/30 bg-black flex items-center justify-center mr-4">
-              <span className="tech-text text-red-500 text-lg">1</span>
+          <div className="flex items-center">
+            <div className="w-12 h-12 border border-yellow-500 bg-black flex items-center justify-center mr-4">
+              <span className="tech-text text-yellow-500 text-xl">1</span>
             </div>
-            <div>
+            <div className="flex-grow">
               <div className="text-2xl font-bold">
                 {results.results[0].Driver.givenName}{" "}
                 {results.results[0].Driver.familyName}
               </div>
               <div className="flex items-center">
                 <span
-                  className="px-3 py-1 text-xs tech-text border mr-2"
-                  style={{
-                    borderColor: getTeamColor(
-                      results.results[0].Constructor.name
-                    ),
-                    color: getTeamColor(results.results[0].Constructor.name),
-                  }}
+                  className={`text-sm tech-text font-bold ${getTeamTextColor(
+                    results.results[0].Constructor.name
+                  )}`}
                 >
                   {results.results[0].Constructor.name}
                 </span>
-                <span className="tech-text text-gray-400 text-sm">
-                  {results.results[0].Time?.time || results.results[0].status}
-                </span>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="font-medium text-lg">
+                {results.results[0].Time?.time || results.results[0].status}
+              </div>
+              <div className="tech-text text-red-500 text-sm">
+                {results.results[0].points} PTS
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 mt-6">
+          <div className="grid grid-cols-3 gap-4 mb-6">
             <div className="bg-black/30 border border-red-500/20 p-4 text-center">
               <div className="tech-text text-xs text-red-500 mb-1">GRID</div>
-              <div className="text-xl font-bold">{results.results[0].grid}</div>
+              <div className="text-2xl font-bold">
+                {results.results[0].grid}
+              </div>
             </div>
             <div className="bg-black/30 border border-red-500/20 p-4 text-center">
               <div className="tech-text text-xs text-red-500 mb-1">LAPS</div>
-              <div className="text-xl font-bold">{results.results[0].laps}</div>
+              <div className="text-2xl font-bold">
+                {results.results[0].laps}
+              </div>
             </div>
             <div className="bg-black/30 border border-red-500/20 p-4 text-center">
               <div className="tech-text text-xs text-red-500 mb-1">POINTS</div>
-              <div className="text-xl font-bold tech-glow">
+              <div className="text-2xl font-bold tech-glow">
                 {results.results[0].points}
               </div>
             </div>
           </div>
 
           {results.results[0].FastestLap && (
-            <div className="mt-6 bg-black/30 border border-red-500/20 p-4">
-              <div className="tech-text text-xs text-red-500 mb-2">
+            <div className="bg-black/30 border border-red-500/20 p-4">
+              <div className="tech-text text-xs text-red-500 mb-3 text-center">
                 FASTEST LAP
               </div>
               <div className="flex justify-between items-center">
-                <div className="text-lg font-bold tech-glow">
+                <div className="text-3xl font-bold tech-glow">
                   {results.results[0].FastestLap.Time.time}
                 </div>
                 <div className="tech-text text-sm text-gray-400">
@@ -329,14 +369,14 @@ const LastRaceResults = () => {
             <div className="tech-text text-xs text-red-500 tracking-wider mb-3 border-b border-red-500/20 pb-2">
               PODIUM FINISHERS
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {results.results.slice(0, 3).map((result, index) => (
                 <div
                   key={index}
                   className="p-3 hover:bg-[#1A1F2A]/30 transition-colors duration-150 flex items-center"
                 >
                   <div
-                    className={`w-8 h-8 flex items-center justify-center border mr-3 ${
+                    className={`w-10 h-10 flex items-center justify-center border mr-3 ${
                       index === 0
                         ? "border-yellow-500 text-yellow-500"
                         : index === 1
@@ -344,31 +384,27 @@ const LastRaceResults = () => {
                         : "border-amber-700 text-amber-700"
                     }`}
                   >
-                    <span className="tech-text text-sm">{result.position}</span>
+                    <span className="tech-text text-lg">{result.position}</span>
                   </div>
                   <div className="flex-grow">
-                    <div className="font-medium">
+                    <div className="font-bold">
                       {result.Driver.givenName} {result.Driver.familyName}
                     </div>
                     <div className="flex items-center">
                       <span
-                        className="w-2 h-2 mr-1"
-                        style={{
-                          backgroundColor: getTeamColor(
-                            result.Constructor.name
-                          ),
-                        }}
-                      ></span>
-                      <span className="tech-text text-xs text-gray-400">
+                        className={`text-sm tech-text font-bold ${getTeamTextColor(
+                          result.Constructor.name
+                        )}`}
+                      >
                         {result.Constructor.name}
                       </span>
                     </div>
                   </div>
-                  <div className="text-right text-sm">
+                  <div className="text-right">
                     <div className="font-medium">
                       {result.Time?.time || result.status}
                     </div>
-                    <div className="tech-text text-xs text-red-500">
+                    <div className="tech-text text-red-500 text-sm">
                       {result.points} PTS
                     </div>
                   </div>
@@ -379,65 +415,145 @@ const LastRaceResults = () => {
         </div>
       </div>
 
-      <div className="tech-card p-6 tech-corner">
-        <div className="grid grid-cols-12 gap-4 mb-4 text-xs font-semibold text-gray-400">
-          <div className="col-span-1">POS</div>
-          <div className="col-span-3">DRIVER</div>
-          <div className="col-span-3">TEAM</div>
-          <div className="col-span-1">GRID</div>
-          <div className="col-span-1">LAPS</div>
-          <div className="col-span-2">TIME/STATUS</div>
-          <div className="col-span-1">PTS</div>
-        </div>
-
-        {displayedResults.map((result, index) => (
-          <div
-            key={index}
-            className={`grid grid-cols-12 gap-4 py-3 text-sm ${
-              index !== displayedResults.length - 1
-                ? "border-b border-gray-800"
-                : ""
-            }`}
-          >
-            <div className="col-span-1 font-bold">{result.position}</div>
-            <div className="col-span-3 flex items-center">
-              <div
-                className={`w-1 h-10 ${getTeamColor(
-                  result.Constructor.name
-                )} mr-3`}
-              ></div>
-              <div>
-                <div className="font-bold">
-                  {result.Driver.familyName.toUpperCase()}
-                </div>
-                <div className="text-xs text-gray-400">
-                  {result.Driver.code}
-                </div>
-              </div>
-            </div>
-            <div className="col-span-3 flex items-center">
-              {result.Constructor.name}
-            </div>
-            <div className="col-span-1">{result.grid}</div>
-            <div className="col-span-1">{result.laps}</div>
-            <div className="col-span-2">
-              {result.Time ? result.Time.time : result.status}
-            </div>
-            <div className="col-span-1">{result.points}</div>
-          </div>
-        ))}
-
-        {!viewAll && results.results.length > 10 && (
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => setViewAll(true)}
-              className="tech-text text-xs px-4 py-2 border border-red-500/30 hover:border-red-500 hover:bg-red-500/10 transition-all duration-200 tech-corner"
-            >
-              SHOW ALL {results.results.length} DRIVERS
-            </button>
-          </div>
-        )}
+      <div className="flex justify-center mt-6 mb-6">
+        <button
+          onClick={() => setShowAllPositions(!showAllPositions)}
+          className="tech-text text-xs px-6 py-3 border border-red-500/30 hover:border-red-500 hover:bg-red-500/10 transition-all duration-200 tech-corner"
+        >
+          {showAllPositions ? "HIDE ALL POSITIONS" : "SHOW ALL POSITIONS"}
+        </button>
       </div>
+
+      {showAllPositions && (
+        <div className="tech-card p-6 tech-corner">
+          <div className="overflow-x-auto custom-scrollbar max-h-[500px]">
+            <table className="w-full">
+              <thead className="sticky top-0 bg-[#0A0F1B] z-10">
+                <tr className="border-b border-red-500/20">
+                  <th className="py-4 px-6 text-left tech-text text-xs text-red-500 tracking-wider">
+                    POS
+                  </th>
+                  <th className="py-4 px-6 text-left tech-text text-xs text-red-500 tracking-wider">
+                    DRIVER
+                  </th>
+                  <th className="py-4 px-6 text-left tech-text text-xs text-red-500 tracking-wider">
+                    TEAM
+                  </th>
+                  <th className="py-4 px-6 text-left tech-text text-xs text-red-500 tracking-wider">
+                    GRID
+                  </th>
+                  <th className="py-4 px-6 text-left tech-text text-xs text-red-500 tracking-wider">
+                    LAPS
+                  </th>
+                  <th className="py-4 px-6 text-left tech-text text-xs text-red-500 tracking-wider">
+                    TIME/STATUS
+                  </th>
+                  <th className="py-4 px-6 text-right tech-text text-xs text-red-500 tracking-wider">
+                    PTS
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#1E232F]/30">
+                {(showAllDriversInPositions
+                  ? results.results
+                  : results.results.slice(0, 5)
+                ).map((result, index) => (
+                  <tr
+                    key={index}
+                    className={`${
+                      index < 3
+                        ? "bg-red-500/5"
+                        : index % 2 === 0
+                        ? "bg-transparent"
+                        : "bg-[#1A1F2A]/10"
+                    } hover:bg-[#1A1F2A]/20 transition-colors duration-150`}
+                  >
+                    <td className="py-4 px-6 whitespace-nowrap">
+                      <div
+                        className={`w-8 h-8 flex items-center justify-center border ${
+                          index === 0
+                            ? "border-yellow-500 text-yellow-500"
+                            : index === 1
+                            ? "border-gray-400 text-gray-400"
+                            : index === 2
+                            ? "border-amber-700 text-amber-700"
+                            : "border-red-500/30 text-gray-400"
+                        }`}
+                      >
+                        <span className="tech-text text-sm">
+                          {result.position}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div
+                          className={`w-1 h-10 ${getTeamColor(
+                            result.Constructor.name
+                          )} mr-3`}
+                        ></div>
+                        <div>
+                          <div className="font-bold">
+                            {result.Driver.familyName.toUpperCase()}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {result.Driver.code}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 whitespace-nowrap">
+                      <span
+                        className={`px-3 py-1 text-xs tech-text ${getTeamTextColor(
+                          result.Constructor.name
+                        )} font-medium`}
+                      >
+                        {result.Constructor.name}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 whitespace-nowrap">
+                      {result.grid}
+                    </td>
+                    <td className="py-4 px-6 whitespace-nowrap">
+                      {result.laps}
+                    </td>
+                    <td className="py-4 px-6 whitespace-nowrap">
+                      {result.Time ? result.Time.time : result.status}
+                    </td>
+                    <td className="py-4 px-6 text-right whitespace-nowrap">
+                      <span className="font-bold text-white tech-glow">
+                        {result.points}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {!showAllDriversInPositions && results.results.length > 5 && (
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={() => setShowAllDriversInPositions(true)}
+                className="tech-text text-xs px-4 py-2 border border-red-500/30 hover:border-red-500 hover:bg-red-500/10 transition-all duration-200 tech-corner"
+              >
+                SHOW ALL {results.results.length} DRIVERS
+              </button>
+            </div>
+          )}
+
+          {showAllDriversInPositions && (
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={() => setShowAllDriversInPositions(false)}
+                className="tech-text text-xs px-4 py-2 border border-red-500/30 hover:border-red-500 hover:bg-red-500/10 transition-all duration-200 tech-corner"
+              >
+                SHOW TOP 5
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 };

@@ -22,8 +22,33 @@ const teamColors = {
   "Stake F1": "bg-[#900000] border-[#900000]",
 };
 
+// Text color mapping
+const teamTextColors = {
+  "Red Bull": "text-[#0600EF]",
+  Ferrari: "text-[#DC0000]",
+  Mercedes: "text-[#00D2BE]",
+  McLaren: "text-[#FF8700]",
+  "Aston Martin": "text-[#006F62]",
+  Alpine: "text-[#0090FF]",
+  Williams: "text-[#005AFF]",
+  AlphaTauri: "text-[#2B4562]",
+  "Alfa Romeo": "text-[#900000]",
+  Haas: "text-[#FFFFFF]",
+  RB: "text-[#0600EF]",
+  "Racing Bulls": "text-[#0600EF]",
+  "Visa Cash App RB": "text-[#0600EF]",
+  VCARB: "text-[#0600EF]",
+  Sauber: "text-[#900000]",
+  "Stake F1 Team": "text-[#900000]",
+  "Stake F1": "text-[#900000]",
+};
+
 const getTeamColor = (teamName) => {
   return teamColors[teamName] || "bg-gray-700 border-gray-700";
+};
+
+const getTeamTextColor = (teamName) => {
+  return teamTextColors[teamName] || "text-gray-400";
 };
 
 const DriverStandings = () => {
@@ -32,6 +57,7 @@ const DriverStandings = () => {
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [showAllDrivers, setShowAllDrivers] = useState(false);
 
   const fetchStandings = async (showRefreshing = false) => {
     try {
@@ -48,17 +74,11 @@ const DriverStandings = () => {
       if (data === "No Data Fetched") {
         setError("No Data Fetched");
         setStandings([]);
-      } else if (Array.isArray(data) && data.length > 0) {
+      } else if (data && Array.isArray(data)) {
         console.log("Setting driver standings:", data);
         setStandings(data);
-        // Check if data is from previous season
-        if (data[0].season < new Date().getFullYear()) {
-          setError(`Showing data from ${data[0].season} season`);
-        } else {
-          // Set a message for current season data but don't treat it as an error
-          setError(null);
-        }
         setLastUpdated(new Date());
+        setError(null);
       } else {
         console.error("Invalid data format received:", data);
         setError("Invalid data format received");
@@ -81,13 +101,6 @@ const DriverStandings = () => {
 
   useEffect(() => {
     fetchStandings();
-
-    // Set up an interval to check for updates every 5 minutes
-    const intervalId = setInterval(() => {
-      fetchStandings(true);
-    }, 5 * 60 * 1000);
-
-    return () => clearInterval(intervalId);
   }, []);
 
   const handleRefresh = () => {
@@ -110,7 +123,7 @@ const DriverStandings = () => {
   // Only show the error state if there's an error AND no standings data
   if (error && standings.length === 0)
     return (
-      <section id="standings" className="mb-16 pt-24">
+      <section id="standings" className="mb-16 pt-8">
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center">
             <div className="w-1 h-6 bg-red-500 mr-3"></div>
@@ -157,16 +170,21 @@ const DriverStandings = () => {
       </section>
     );
 
+  if (standings.length === 0) return null;
+
+  // Display only top 5 drivers or all drivers based on state
+  const displayedStandings = showAllDrivers ? standings : standings.slice(0, 5);
+
   return (
-    <section id="standings" className="mb-16 pt-24">
+    <section id="standings" className="mb-16 pt-8">
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center">
           <div className="w-1 h-6 bg-red-500 mr-3"></div>
           <div>
             <h2 className="text-2xl font-bold">DRIVER STANDINGS</h2>
             <div className="tech-text text-xs text-red-500 tracking-wider">
-              {error ? error : "CURRENT SEASON"}{" "}
-              {lastUpdated && `• UPDATED ${lastUpdated.toLocaleTimeString()}`}
+              {lastUpdated && `UPDATED ${lastUpdated.toLocaleTimeString()} • `}
+              CURRENT SEASON
             </div>
           </div>
         </div>
@@ -189,9 +207,9 @@ const DriverStandings = () => {
       </div>
 
       <div className="tech-card tech-corner overflow-hidden">
-        <div className="overflow-x-auto custom-scrollbar">
+        <div className="overflow-x-auto custom-scrollbar max-h-[500px]">
           <table className="w-full">
-            <thead>
+            <thead className="sticky top-0 bg-[#0A0F1B] z-10">
               <tr className="border-b border-red-500/20">
                 <th className="py-4 px-6 text-left tech-text text-xs text-red-500 tracking-wider">
                   POS
@@ -211,7 +229,7 @@ const DriverStandings = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1E232F]/30">
-              {standings.map((driver, index) => (
+              {displayedStandings.map((driver, index) => (
                 <tr
                   key={index}
                   className={`${
@@ -261,11 +279,9 @@ const DriverStandings = () => {
                   </td>
                   <td className="py-4 px-6 whitespace-nowrap">
                     <span
-                      className="px-3 py-1 text-xs tech-text border"
-                      style={{
-                        borderColor: getTeamColor(driver.Constructor?.name),
-                        color: getTeamColor(driver.Constructor?.name),
-                      }}
+                      className={`px-3 py-1 text-xs tech-text font-bold ${getTeamTextColor(
+                        driver.Constructor?.name
+                      )}`}
                     >
                       {driver.Constructor?.name}
                     </span>
@@ -285,6 +301,17 @@ const DriverStandings = () => {
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div className="flex justify-center mt-6">
+        <button
+          onClick={() => setShowAllDrivers(!showAllDrivers)}
+          className="tech-text text-xs px-6 py-3 border border-red-500/30 hover:border-red-500 hover:bg-red-500/10 transition-all duration-200 tech-corner"
+        >
+          {showAllDrivers
+            ? "SHOW TOP 5"
+            : `SHOW ALL DRIVERS (${standings.length})`}
+        </button>
       </div>
     </section>
   );
