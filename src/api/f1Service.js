@@ -109,7 +109,7 @@ export const getRaceSchedule = async (season = new Date().getFullYear()) => {
     const timestamp = new Date().getTime();
 
     // Get the race schedule for the season
-    const response = await jolpicaInstance.get(`/ergast/f1/${season}.json`);
+    const response = await jolpicaInstance.get(`ergast/f1/${season}.json`);
 
     if (
       response.data &&
@@ -185,7 +185,7 @@ export const getLastRaceResults = async (season = new Date().getFullYear()) => {
 
     // First get the last round number for the season
     const seasonsResponse = await jolpicaInstance.get(
-      `/ergast/f1/${season}.json`
+      `ergast/f1/${season}.json`
     );
 
     if (
@@ -204,7 +204,7 @@ export const getLastRaceResults = async (season = new Date().getFullYear()) => {
 
       // Now get the results for this race
       const resultsResponse = await jolpicaInstance.get(
-        `/ergast/f1/${season}/${lastRaceRound}/results.json`
+        `ergast/f1/${season}/${lastRaceRound}/results.json`
       );
 
       if (
