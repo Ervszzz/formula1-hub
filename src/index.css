@@ -1,0 +1,211 @@
+@import url("https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Space+Mono&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: "Rajdhani", system-ui, sans-serif;
+  color-scheme: dark;
+  --primary-glow: rgba(255, 0, 0, 0.2);
+  --grid-size: 30px;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #080a0f;
+  color: #ffffff;
+  background-image: linear-gradient(rgba(20, 20, 30, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 20, 30, 0.1) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+  background-position: center center;
+}
+
+.tech-text {
+  font-family: "Space Mono", monospace;
+}
+
+.tech-glow {
+  text-shadow: 0 0 10px var(--primary-glow);
+}
+
+.glow {
+  box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.glow-text {
+  text-shadow: 0 0 10px var(--primary-glow);
+}
+
+.tech-border {
+  position: relative;
+  overflow: hidden;
+}
+
+.tech-border::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 0, 0, 0.3),
+    transparent
+  );
+}
+
+.tech-border::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 0, 0, 0.3),
+    transparent
+  );
+}
+
+.tech-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 0, 0, 0.1);
+  background: rgba(20, 20, 30, 0.5);
+  backdrop-filter: blur(10px);
+}
+
+.tech-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle at top right,
+    rgba(255, 0, 0, 0.1),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.tech-corner {
+  position: relative;
+}
+
+.tech-corner::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-top: 1px solid rgba(255, 0, 0, 0.5);
+  border-right: 1px solid rgba(255, 0, 0, 0.5);
+}
+
+.tech-corner::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  border-bottom: 1px solid rgba(255, 0, 0, 0.5);
+  border-left: 1px solid rgba(255, 0, 0, 0.5);
+}
+
+.data-line {
+  position: relative;
+}
+
+.data-line::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -20px;
+  width: 15px;
+  height: 1px;
+  background-color: rgba(255, 0, 0, 0.5);
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 0;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 0, 0, 0.3);
+  border-radius: 0;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 0, 0, 0.5);
+}
+
+/* Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 0, 0, 0.3) rgba(0, 0, 0, 0.2);
+}
+
+/* Animated elements */
+@keyframes pulse {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+
+.tech-pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes scan {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.tech-scan {
+  position: relative;
+  overflow: hidden;
+}
+
+.tech-scan::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 0, 0, 0.2),
+    transparent
+  );
+  animation: scan 2s linear infinite;
+  pointer-events: none;
+}
