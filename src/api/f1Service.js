@@ -17,7 +17,7 @@ export const getDriverStandings = async (season = new Date().getFullYear()) => {
 
     // Use the Ergast-compatible endpoint format
     const response = await jolpicaInstance.get(
-      `ergast/f1/${season}/driverStandings.json`
+      `f1/${season}/driverStandings.json`
     );
 
     console.log(
@@ -109,7 +109,7 @@ export const getRaceSchedule = async (season = new Date().getFullYear()) => {
     const timestamp = new Date().getTime();
 
     // Get the race schedule for the season
-    const response = await jolpicaInstance.get(`ergast/f1/${season}.json`);
+    const response = await jolpicaInstance.get(`f1/${season}.json`);
 
     if (
       response.data &&
@@ -184,9 +184,7 @@ export const getLastRaceResults = async (season = new Date().getFullYear()) => {
     const timestamp = new Date().getTime();
 
     // First get the last round number for the season
-    const seasonsResponse = await jolpicaInstance.get(
-      `ergast/f1/${season}.json`
-    );
+    const seasonsResponse = await jolpicaInstance.get(`f1/${season}.json`);
 
     if (
       seasonsResponse.data &&
@@ -204,7 +202,7 @@ export const getLastRaceResults = async (season = new Date().getFullYear()) => {
 
       // Now get the results for this race
       const resultsResponse = await jolpicaInstance.get(
-        `ergast/f1/${season}/${lastRaceRound}/results.json`
+        `f1/${season}/${lastRaceRound}/results.json`
       );
 
       if (
