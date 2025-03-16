@@ -122,6 +122,15 @@ export const getRaceSchedule = async (
   try {
     console.log(`Fetching race schedule from Jolpica API for season ${season}`);
     console.log(`API URL: ${JOLPICA_BASE_URL}/f1/${season}.json`);
+    console.log(`Environment: ${isDevelopment ? "Development" : "Production"}`);
+
+    // For debugging in Vercel
+    if (!isDevelopment) {
+      console.log(
+        `Full URL in production: ${window.location.origin}/api/jolpica/f1/${season}.json`
+      );
+    }
+
     const timestamp = new Date().getTime();
 
     // Try with axios first
@@ -189,9 +198,66 @@ export const getRaceSchedule = async (
     console.log("Trying with fetch API as fallback");
 
     // Use direct Jolpica URL for development, proxied URL for production
-    const directUrl = isDevelopment
-      ? `https://api.jolpi.ca/ergast/f1/${season}.json`
-      : `${window.location.origin}/api/jolpica/f1/${season}.json`;
+    let directUrl;
+    if (isDevelopment) {
+      directUrl = `https://api.jolpi.ca/ergast/f1/${season}.json`;
+    } else {
+      // In production, try both the proxy and direct URL
+      try {
+        // First try with the proxy
+        directUrl = `${window.location.origin}/api/jolpica/f1/${season}.json`;
+        console.log(`Trying production proxy URL: ${directUrl}`);
+
+        const proxyResponse = await fetch(directUrl);
+        if (proxyResponse.ok) {
+          const responseData = await proxyResponse.json();
+          console.log(
+            "Race schedule API response with fetch (proxy):",
+            proxyResponse.status
+          );
+
+          if (
+            responseData &&
+            responseData.MRData &&
+            responseData.MRData.RaceTable &&
+            responseData.MRData.RaceTable.Races &&
+            responseData.MRData.RaceTable.Races.length > 0
+          ) {
+            const races = responseData.MRData.RaceTable.Races;
+            console.log(
+              `Successfully fetched ${races.length} races with proxy`
+            );
+
+            // Transform to match our expected format
+            const transformedRaces = races.map((race) => ({
+              season: parseInt(race.season),
+              round: parseInt(race.round),
+              raceName: race.raceName,
+              date: race.date,
+              time: race.time,
+              Circuit: {
+                circuitId: race.Circuit.circuitId,
+                circuitName: race.Circuit.circuitName,
+                Location: {
+                  locality: race.Circuit.Location.locality,
+                  country: race.Circuit.Location.country,
+                },
+              },
+              _timestamp: timestamp,
+            }));
+
+            return transformedRaces;
+          }
+        }
+
+        // If proxy fails, try direct URL as last resort
+        console.log("Proxy approach failed, trying direct URL as last resort");
+        directUrl = `https://api.jolpi.ca/ergast/f1/${season}.json`;
+      } catch (proxyError) {
+        console.log("Error with proxy approach:", proxyError.message);
+        directUrl = `https://api.jolpi.ca/ergast/f1/${season}.json`;
+      }
+    }
 
     console.log(`Direct URL: ${directUrl}`);
 

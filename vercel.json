@@ -22,5 +22,6 @@
         { "key": "X-Debug-Target", "value": "https://api.jolpi.ca/ergast" }
       ]
     }
-  ]
+  ],
+  "trailingSlash": false
 }
