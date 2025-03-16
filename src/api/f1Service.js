@@ -5,10 +5,11 @@ const isDevelopment =
   window.location.hostname === "localhost" ||
   window.location.hostname === "127.0.0.1";
 
-// Use direct Ergast API for local development, proxy for production
+// Use Jolpica API for both development and production
+// This is because Ergast doesn't have 2025 data yet
 const JOLPICA_BASE_URL = isDevelopment
-  ? "https://ergast.com/api"
-  : "/api/jolpica";
+  ? "https://api.jolpi.ca/ergast" // Use Jolpica directly in development (correct URL)
+  : "/api/jolpica"; // Use proxy in production
 
 console.log(
   `Using API base URL: ${JOLPICA_BASE_URL} (isDevelopment: ${isDevelopment})`
@@ -114,7 +115,10 @@ export const getDriverStandings = async (season = new Date().getFullYear()) => {
 };
 
 // Fetch race schedule from Jolpica API
-export const getRaceSchedule = async (season = new Date().getFullYear()) => {
+export const getRaceSchedule = async (
+  season = new Date().getFullYear(),
+  allowFallback = true
+) => {
   try {
     console.log(`Fetching race schedule from Jolpica API for season ${season}`);
     console.log(`API URL: ${JOLPICA_BASE_URL}/f1/${season}.json`);
@@ -184,9 +188,9 @@ export const getRaceSchedule = async (season = new Date().getFullYear()) => {
     // If axios fails, try with fetch as a fallback
     console.log("Trying with fetch API as fallback");
 
-    // Use direct URL for development, proxied URL for production
+    // Use direct Jolpica URL for development, proxied URL for production
     const directUrl = isDevelopment
-      ? `https://ergast.com/api/f1/${season}.json`
+      ? `https://api.jolpi.ca/ergast/f1/${season}.json`
       : `${window.location.origin}/api/jolpica/f1/${season}.json`;
 
     console.log(`Direct URL: ${directUrl}`);
@@ -250,11 +254,11 @@ export const getRaceSchedule = async (season = new Date().getFullYear()) => {
     } else {
       console.log("No race schedule data found in API response");
 
-      // Try previous season if we're looking at current year
-      if (season === new Date().getFullYear()) {
+      // Try previous season if we're looking at current year and fallback is allowed
+      if (allowFallback && season === new Date().getFullYear()) {
         console.log("Trying previous season");
         const previousYear = season - 1;
-        return await getRaceSchedule(previousYear);
+        return await getRaceSchedule(previousYear, allowFallback);
       } else {
         return "No Data Fetched";
       }
@@ -269,12 +273,12 @@ export const getRaceSchedule = async (season = new Date().getFullYear()) => {
       data: error.response?.data,
     });
 
-    // Try previous season if we're looking at current year
-    if (season === new Date().getFullYear()) {
+    // Try previous season if we're looking at current year and fallback is allowed
+    if (allowFallback && season === new Date().getFullYear()) {
       console.log("Error occurred, trying previous season");
       const previousYear = season - 1;
       try {
-        return await getRaceSchedule(previousYear);
+        return await getRaceSchedule(previousYear, allowFallback);
       } catch (prevYearError) {
         console.error("Error fetching previous season data:", prevYearError);
         console.log("No data available");

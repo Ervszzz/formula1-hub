@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/jolpica/:path*",
-      "destination": "https://ergast.com/api/:path*"
+      "destination": "https://api.jolpi.ca/ergast/:path*"
     }
   ],
   "headers": [
@@ -18,7 +18,8 @@
         {
           "key": "Access-Control-Allow-Headers",
           "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
-        }
+        },
+        { "key": "X-Debug-Target", "value": "https://api.jolpi.ca/ergast" }
       ]
     }
   ]
