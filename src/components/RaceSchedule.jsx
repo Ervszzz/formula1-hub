@@ -21,27 +21,34 @@ const RaceSchedule = () => {
       const currentYear = new Date().getFullYear();
       setSeasonYear(currentYear);
 
+      console.log("Fetching race schedule for year:", currentYear);
       const data = await getRaceSchedule(currentYear);
+      console.log("Race schedule data received:", data);
+      console.log("Data type:", typeof data, Array.isArray(data));
 
       if (data === "No Data Fetched") {
+        console.log("No data fetched from API");
         setError("No Data Fetched");
         setRaces([]);
       } else if (data && data.length > 0) {
+        console.log(`Received ${data.length} races, first race:`, data[0]);
         // The OpenF1 API already returns dates in the correct format
         // and our service handles year adjustments, so we can use the data directly
         setRaces(data);
 
         // Check if data is from previous season
         if (data[0].season < currentYear) {
+          console.log(`Data is from previous season: ${data[0].season}`);
           setError(`Showing data from ${data[0].season} season`);
           setSeasonYear(data[0].season);
         } else {
+          console.log("Data is from current season");
           setError(null);
         }
 
         setLastUpdated(new Date());
       } else {
-        console.warn("No race schedule data returned");
+        console.warn("No race schedule data returned or empty array");
         setError("No data fetched");
         setRaces([]);
       }
