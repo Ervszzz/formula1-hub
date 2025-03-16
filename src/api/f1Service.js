@@ -109,11 +109,58 @@ export const getRaceSchedule = async (season = new Date().getFullYear()) => {
     console.log(`API URL: ${JOLPICA_BASE_URL}/f1/${season}.json`);
     const timestamp = new Date().getTime();
 
-    // Create a direct URL for debugging
-    const directUrl = `${window.location.origin}/api/jolpica/f1/${season}.json`;
-    console.log(`Trying direct URL: ${directUrl}`);
+    // Try with axios first
+    try {
+      const response = await jolpicaInstance.get(`f1/${season}.json`);
+      console.log(
+        "Race schedule API response with axios:",
+        response.status,
+        response.statusText
+      );
 
-    // Try using fetch directly instead of axios
+      if (
+        response.data &&
+        response.data.MRData &&
+        response.data.MRData.RaceTable &&
+        response.data.MRData.RaceTable.Races &&
+        response.data.MRData.RaceTable.Races.length > 0
+      ) {
+        const races = response.data.MRData.RaceTable.Races;
+
+        console.log(
+          `Successfully fetched ${races.length} races for season ${season}`
+        );
+
+        // Transform to match our expected format
+        return races.map((race) => ({
+          season: parseInt(race.season),
+          round: parseInt(race.round),
+          raceName: race.raceName,
+          date: race.date,
+          time: race.time,
+          Circuit: {
+            circuitId: race.Circuit.circuitId,
+            circuitName: race.Circuit.circuitName,
+            Location: {
+              locality: race.Circuit.Location.locality,
+              country: race.Circuit.Location.country,
+            },
+          },
+          _timestamp: timestamp,
+        }));
+      }
+    } catch (axiosError) {
+      console.log(
+        "Axios approach failed, trying fetch API:",
+        axiosError.message
+      );
+    }
+
+    // If axios fails, try with fetch as a fallback
+    console.log("Trying with fetch API as fallback");
+    const directUrl = `${window.location.origin}/api/jolpica/f1/${season}.json`;
+    console.log(`Direct URL: ${directUrl}`);
+
     const fetchResponse = await fetch(directUrl);
     if (!fetchResponse.ok) {
       throw new Error(`HTTP error! status: ${fetchResponse.status}`);
@@ -121,7 +168,7 @@ export const getRaceSchedule = async (season = new Date().getFullYear()) => {
 
     const responseData = await fetchResponse.json();
     console.log(
-      "Race schedule API response:",
+      "Race schedule API response with fetch:",
       fetchResponse.status,
       fetchResponse.statusText
     );
@@ -136,7 +183,7 @@ export const getRaceSchedule = async (season = new Date().getFullYear()) => {
       const races = responseData.MRData.RaceTable.Races;
 
       console.log(
-        `Successfully fetched ${races.length} races for season ${season}`
+        `Successfully fetched ${races.length} races for season ${season} with fetch`
       );
 
       // Transform to match our expected format
