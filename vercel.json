@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/jolpica/:path*",
-      "destination": "https://api.jolpica.com/:path*"
+      "destination": "https://ergast.com/api/:path*"
     }
   ],
   "headers": [
