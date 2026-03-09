@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { getRaceSchedule } from "../api/f1Service";
 import { useFetchData } from "../hooks/useFetchData";
 import {
@@ -9,8 +9,10 @@ import {
   getNextRace,
   groupRacesByMonth,
 } from "../utils/raceUtils";
+import ScheduleSkeleton from "./skeletons/ScheduleSkeleton";
+import type { Race } from "../types/f1";
 
-const validateRaces = (races) =>
+const validateRaces = (races: Race[]): boolean =>
   Array.isArray(races) &&
   races.length > 0 &&
   races.every(
@@ -26,7 +28,7 @@ const validateRaces = (races) =>
 
 const RaceSchedule = () => {
   const { data: races, loading, error, refreshing, lastUpdated, refresh } =
-    useFetchData(getRaceSchedule, validateRaces);
+    useFetchData<Race[]>(getRaceSchedule, validateRaces);
 
   // Auto-refresh every 5 minutes
   useEffect(() => {
@@ -70,18 +72,7 @@ const RaceSchedule = () => {
     </div>
   );
 
-  if (loading)
-    return (
-      <div className="flex justify-center items-center h-full min-h-[500px]">
-        <div className="relative w-16 h-16">
-          <div className="absolute top-0 left-0 w-full h-full border-2 border-red-500/50 rounded-sm opacity-25 animate-ping"></div>
-          <div className="absolute top-0 left-0 w-full h-full border-2 border-t-transparent border-red-500 rounded-sm animate-spin"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="tech-text text-red-500 text-xs">LOADING</span>
-          </div>
-        </div>
-      </div>
-    );
+  if (loading) return <ScheduleSkeleton />;
 
   if (error || !races?.length)
     return (
@@ -205,7 +196,14 @@ const RaceSchedule = () => {
                     <div className="flex-grow min-w-0">
                       <div className="flex justify-between items-start">
                         <div className="truncate pr-2">
-                          <div className="font-medium">{race.raceName}</div>
+                          <div className="font-medium flex items-center">
+                            {race.raceName}
+                            {race.hasSprint && (
+                              <span className="ml-2 px-1 py-0.5 text-[9px] tech-text border border-yellow-500/50 text-yellow-500">
+                                SPR
+                              </span>
+                            )}
+                          </div>
                           <div className="tech-text text-xs text-gray-400 truncate">
                             {race.Circuit.circuitName}
                           </div>

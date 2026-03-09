@@ -1,11 +1,14 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 
-export const useFetchData = (fetchFn, validate) => {
-  const [data, setData] = useState(null);
+export const useFetchData = <T>(
+  fetchFn: () => Promise<T | null>,
+  validate?: (data: T) => boolean
+) => {
+  const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Use refs so `load` stays stable while always calling the latest fetchFn/validate
   const fetchRef = useRef(fetchFn);
@@ -17,7 +20,7 @@ export const useFetchData = (fetchFn, validate) => {
     isRefresh ? setRefreshing(true) : setLoading(true);
     try {
       const result = await fetchRef.current();
-      if (result === "No Data Fetched") {
+      if (result === null) {
         setError("No Data Fetched");
         setData(null);
       } else if (!validateRef.current || validateRef.current(result)) {

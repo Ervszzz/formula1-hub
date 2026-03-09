@@ -1,4 +1,12 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { NavLink, Link } from "react-router-dom";
+
+const NAV_ITEMS = [
+  { name: "STANDINGS", path: "/standings" },
+  { name: "SCHEDULE", path: "/schedule" },
+  { name: "RESULTS", path: "/results" },
+  { name: "CONSTRUCTORS", path: "/constructors" },
+];
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -40,7 +48,7 @@ const Header = () => {
       }`}
     >
       <div className="container mx-auto px-4 flex items-center justify-between max-w-[1920px]">
-        <div className="flex items-center">
+        <Link to="/" className="flex items-center">
           <div className="w-10 h-10 bg-black border border-red-500/30 rounded-sm flex items-center justify-center mr-3 relative tech-corner">
             <span className="text-red-500 font-bold text-xl tech-text">F1</span>
             <div className="absolute top-0 right-0 w-2 h-2 bg-red-500 tech-pulse"></div>
@@ -53,24 +61,24 @@ const Header = () => {
               {formattedTime}
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Desktop navigation */}
         <nav className="hidden lg:flex items-center space-x-4">
-          {[
-            { name: "STANDINGS", id: "standings" },
-            { name: "SCHEDULE", id: "schedule" },
-            { name: "RESULTS", id: "results" },
-          ].map((item, index) => (
-            <a
-              key={index}
-              href={`#${item.id}`}
-              className="px-4 py-2 tech-text text-sm tracking-wider text-gray-300 hover:text-red-500 transition-all duration-200 relative group"
+          {NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `px-4 py-2 tech-text text-sm tracking-wider transition-all duration-200 relative group ${
+                  isActive ? "text-red-500" : "text-gray-300 hover:text-red-500"
+                }`
+              }
             >
               <span className="relative z-10">{item.name}</span>
               <span className="absolute bottom-0 left-0 w-0 h-px bg-red-500 transition-all duration-300 group-hover:w-full"></span>
               <span className="absolute top-0 right-0 w-0 h-px bg-red-500 transition-all duration-300 group-hover:w-full"></span>
-            </a>
+            </NavLink>
           ))}
           <a
             href="https://www.formula1.com"
@@ -116,19 +124,19 @@ const Header = () => {
       >
         <div className="bg-[#0A0D14] border-t border-red-500/20 px-4 py-2 mt-2">
           <div className="flex flex-col space-y-1">
-            {[
-              { name: "STANDINGS", id: "standings" },
-              { name: "SCHEDULE", id: "schedule" },
-              { name: "RESULTS", id: "results" },
-            ].map((item, index) => (
-              <a
-                key={index}
-                href={`#${item.id}`}
-                className="px-4 py-3 tech-text text-sm tracking-wider hover:text-red-500 transition-colors duration-200 data-line"
+            {NAV_ITEMS.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `px-4 py-3 tech-text text-sm tracking-wider transition-colors duration-200 data-line ${
+                    isActive ? "text-red-500" : "hover:text-red-500"
+                  }`
+                }
                 onClick={() => setIsMenuOpen(false)}
               >
                 {item.name}
-              </a>
+              </NavLink>
             ))}
             <a
               href="https://www.formula1.com"

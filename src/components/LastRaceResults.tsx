@@ -1,19 +1,26 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { getLastRaceResults } from "../api/f1Service";
 import { useFetchData } from "../hooks/useFetchData";
 import { getTeamHexColor, getTeamTextClass } from "../utils/teamColors";
+import ResultsSkeleton from "./skeletons/ResultsSkeleton";
+import type { LastRaceData } from "../types/f1";
 
-const validateResults = (data) =>
-  data?.results && Array.isArray(data.results);
+const validateResults = (data: LastRaceData): boolean =>
+  !!(data?.results && Array.isArray(data.results));
 
-const positionClass = (index) => {
+const positionClass = (index: number): string => {
   if (index === 0) return "border-yellow-500 text-yellow-500";
   if (index === 1) return "border-gray-400 text-gray-400";
   if (index === 2) return "border-amber-700 text-amber-700";
   return "border-red-500/30 text-gray-400";
 };
 
-const RefreshButton = ({ onRefresh, refreshing }) => (
+interface RefreshButtonProps {
+  onRefresh: () => void;
+  refreshing: boolean;
+}
+
+const RefreshButton = ({ onRefresh, refreshing }: RefreshButtonProps) => (
   <button
     onClick={onRefresh}
     disabled={refreshing}
@@ -32,7 +39,17 @@ const RefreshButton = ({ onRefresh, refreshing }) => (
   </button>
 );
 
-const SectionHeader = ({ results, error, lastUpdated, onRefresh, refreshing, showAll, onToggleAll }) => (
+interface SectionHeaderProps {
+  results: LastRaceData | null;
+  error: string | null;
+  lastUpdated: Date | null;
+  onRefresh: () => void;
+  refreshing: boolean;
+  showAll: boolean;
+  onToggleAll: () => void;
+}
+
+const SectionHeader = ({ results, error, lastUpdated, onRefresh, refreshing, showAll, onToggleAll }: SectionHeaderProps) => (
   <div className="flex justify-between items-center mb-6">
     <div className="flex items-center">
       <div className="w-1 h-6 bg-red-500 mr-3"></div>
@@ -74,7 +91,7 @@ const SectionHeader = ({ results, error, lastUpdated, onRefresh, refreshing, sho
 
 const LastRaceResults = () => {
   const { data: results, loading, error, refreshing, lastUpdated, refresh } =
-    useFetchData(getLastRaceResults, validateResults);
+    useFetchData<LastRaceData>(getLastRaceResults, validateResults);
   const [showAll, setShowAll] = useState(false);
   const [showAllDrivers, setShowAllDrivers] = useState(false);
 
@@ -84,26 +101,19 @@ const LastRaceResults = () => {
       : null;
   const displayError = prevSeasonError || (error && !results ? error : null);
 
-  if (loading)
-    return (
-      <div className="tech-card p-6 tech-corner animate-pulse">
-        <div className="h-6 bg-gray-700 rounded w-1/3 mb-4"></div>
-        <div className="h-4 bg-gray-700 rounded w-1/4 mb-6"></div>
-        <div className="space-y-3">
-          <div className="h-10 bg-gray-700 rounded"></div>
-          <div className="h-10 bg-gray-700 rounded"></div>
-          <div className="h-10 bg-gray-700 rounded"></div>
-        </div>
-      </div>
-    );
+  if (loading) return <ResultsSkeleton />;
 
   if (error && !results)
     return (
       <section id="results" className="mb-16">
         <SectionHeader
+          results={null}
           error={displayError}
+          lastUpdated={null}
           onRefresh={refresh}
           refreshing={refreshing}
+          showAll={false}
+          onToggleAll={() => {}}
         />
         <div className="tech-card p-6 flex items-center justify-center tech-corner">
           <div className="text-center">
@@ -187,8 +197,8 @@ const LastRaceResults = () => {
 
           <div className="grid grid-cols-3 gap-4 mb-6">
             {[
-              { label: "GRID", value: winner.grid },
-              { label: "LAPS", value: winner.laps },
+              { label: "GRID", value: winner.grid, glow: false },
+              { label: "LAPS", value: winner.laps, glow: false },
               { label: "POINTS", value: winner.points, glow: true },
             ].map(({ label, value, glow }) => (
               <div

@@ -1,4 +1,4 @@
-const TEAM_COLORS = {
+const TEAM_COLORS: Record<string, { hex: string; text: string }> = {
   // Current teams (precise hex)
   "Red Bull":          { hex: "#0600EF", text: "text-[#0600EF]" },
   Ferrari:             { hex: "#DC0000", text: "text-[#DC0000]" },
@@ -44,8 +44,8 @@ const TEAM_COLORS = {
   Tyrrell:             { hex: "#4A90D9", text: "text-blue-300" },
 };
 
-export const getTeamHexColor = (teamName) =>
-  TEAM_COLORS[teamName]?.hex ?? "#6B7280";
+export const getTeamHexColor = (teamName: string | undefined): string =>
+  (teamName ? TEAM_COLORS[teamName]?.hex : undefined) ?? "#6B7280";
 
-export const getTeamTextClass = (teamName) =>
-  TEAM_COLORS[teamName]?.text ?? "text-gray-400";
+export const getTeamTextClass = (teamName: string | undefined): string =>
+  (teamName ? TEAM_COLORS[teamName]?.text : undefined) ?? "text-gray-400";
