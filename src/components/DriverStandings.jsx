@@ -1,111 +1,50 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { getDriverStandings } from "../api/f1Service";
+import { useFetchData } from "../hooks/useFetchData";
+import { getTeamHexColor, getTeamTextClass } from "../utils/teamColors";
 
-// Team color mapping
-const teamColors = {
-  "Red Bull": "bg-[#0600EF] border-[#0600EF]",
-  Ferrari: "bg-[#DC0000] border-[#DC0000]",
-  Mercedes: "bg-[#00D2BE] border-[#00D2BE]",
-  McLaren: "bg-[#FF8700] border-[#FF8700]",
-  "Aston Martin": "bg-[#006F62] border-[#006F62]",
-  Alpine: "bg-[#0090FF] border-[#0090FF]",
-  Williams: "bg-[#005AFF] border-[#005AFF]",
-  AlphaTauri: "bg-[#2B4562] border-[#2B4562]",
-  "Alfa Romeo": "bg-[#900000] border-[#900000]",
-  Haas: "bg-[#FFFFFF] border-[#FFFFFF] text-black",
-  RB: "bg-[#0600EF] border-[#0600EF]",
-  "Racing Bulls": "bg-[#0600EF] border-[#0600EF]",
-  "Visa Cash App RB": "bg-[#0600EF] border-[#0600EF]",
-  VCARB: "bg-[#0600EF] border-[#0600EF]",
-  Sauber: "bg-[#900000] border-[#900000]",
-  "Stake F1 Team": "bg-[#900000] border-[#900000]",
-  "Stake F1": "bg-[#900000] border-[#900000]",
+const positionClass = (index) => {
+  if (index === 0) return "border-yellow-500 text-yellow-500";
+  if (index === 1) return "border-gray-400 text-gray-400";
+  if (index === 2) return "border-amber-700 text-amber-700";
+  return "border-red-500/30 text-gray-400";
 };
 
-// Text color mapping
-const teamTextColors = {
-  "Red Bull": "text-[#0600EF]",
-  Ferrari: "text-[#DC0000]",
-  Mercedes: "text-[#00D2BE]",
-  McLaren: "text-[#FF8700]",
-  "Aston Martin": "text-[#006F62]",
-  Alpine: "text-[#0090FF]",
-  Williams: "text-[#005AFF]",
-  AlphaTauri: "text-[#2B4562]",
-  "Alfa Romeo": "text-[#900000]",
-  Haas: "text-[#FFFFFF]",
-  RB: "text-[#0600EF]",
-  "Racing Bulls": "text-[#0600EF]",
-  "Visa Cash App RB": "text-[#0600EF]",
-  VCARB: "text-[#0600EF]",
-  Sauber: "text-[#900000]",
-  "Stake F1 Team": "text-[#900000]",
-  "Stake F1": "text-[#900000]",
-};
-
-const getTeamColor = (teamName) => {
-  return teamColors[teamName] || "bg-gray-700 border-gray-700";
-};
-
-const getTeamTextColor = (teamName) => {
-  return teamTextColors[teamName] || "text-gray-400";
-};
+const SectionHeader = ({ lastUpdated, onRefresh, refreshing }) => (
+  <div className="mb-6 flex items-center justify-between">
+    <div className="flex items-center">
+      <div className="w-1 h-6 bg-red-500 mr-3"></div>
+      <div>
+        <h2 className="text-2xl font-bold">DRIVER STANDINGS</h2>
+        <div className="tech-text text-xs text-red-500 tracking-wider">
+          {lastUpdated && `UPDATED ${lastUpdated.toLocaleTimeString()} • `}
+          CURRENT SEASON
+        </div>
+      </div>
+    </div>
+    <button
+      onClick={onRefresh}
+      disabled={refreshing}
+      className={`tech-text text-xs px-4 py-2 border border-red-500/30 hover:border-red-500 hover:bg-red-500/10 transition-all duration-200 tech-corner flex items-center ${
+        refreshing ? "opacity-50 cursor-not-allowed" : ""
+      }`}
+    >
+      {refreshing ? (
+        <>
+          <div className="w-3 h-3 border-t-transparent border border-red-500 rounded-full animate-spin mr-2"></div>
+          UPDATING
+        </>
+      ) : (
+        "REFRESH DATA"
+      )}
+    </button>
+  </div>
+);
 
 const DriverStandings = () => {
-  const [standings, setStandings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [showAllDrivers, setShowAllDrivers] = useState(false);
-
-  const fetchStandings = async (showRefreshing = false) => {
-    try {
-      if (showRefreshing) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-
-      // Add cache-busting parameter to force fresh data
-      const data = await getDriverStandings();
-      console.log("Driver standings data received:", data);
-
-      if (data === "No Data Fetched") {
-        setError("No Data Fetched");
-        setStandings([]);
-      } else if (data && Array.isArray(data)) {
-        console.log("Setting driver standings:", data);
-        setStandings(data);
-        setLastUpdated(new Date());
-        setError(null);
-      } else {
-        console.error("Invalid data format received:", data);
-        setError("Invalid data format received");
-        setStandings([]);
-      }
-
-      if (showRefreshing) {
-        setRefreshing(false);
-      } else {
-        setLoading(false);
-      }
-    } catch (err) {
-      console.error("Error in driver standings:", err);
-      setError("Failed to load driver standings");
-      setStandings([]);
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchStandings();
-  }, []);
-
-  const handleRefresh = () => {
-    fetchStandings(true);
-  };
+  const { data: standings, loading, error, refreshing, lastUpdated, refresh } =
+    useFetchData(getDriverStandings, Array.isArray);
+  const [showAll, setShowAll] = useState(false);
 
   if (loading)
     return (
@@ -120,27 +59,10 @@ const DriverStandings = () => {
       </div>
     );
 
-  // Only show the error state if there's an error AND no standings data
-  if (error && standings.length === 0)
+  if (error && !standings)
     return (
       <section id="standings" className="mb-16 pt-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="w-1 h-6 bg-red-500 mr-3"></div>
-            <div>
-              <h2 className="text-2xl font-bold">DRIVER STANDINGS</h2>
-              <div className="tech-text text-xs text-red-500 tracking-wider">
-                CURRENT SEASON
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={handleRefresh}
-            className="tech-text text-xs px-4 py-2 border border-red-500/30 hover:border-red-500 hover:bg-red-500/10 transition-all duration-200 tech-corner"
-          >
-            REFRESH DATA
-          </button>
-        </div>
+        <SectionHeader onRefresh={refresh} refreshing={refreshing} />
         <div className="tech-card p-6 flex items-center justify-center tech-corner">
           <div className="text-center">
             <div className="w-12 h-12 mx-auto mb-4 border border-red-500/30 rounded-sm flex items-center justify-center">
@@ -170,68 +92,39 @@ const DriverStandings = () => {
       </section>
     );
 
-  if (standings.length === 0) return null;
+  if (!standings?.length) return null;
 
-  // Display only top 5 drivers or all drivers based on state
-  const displayedStandings = showAllDrivers ? standings : standings.slice(0, 5);
+  const displayed = showAll ? standings : standings.slice(0, 5);
 
   return (
     <section id="standings" className="mb-16 pt-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center">
-          <div className="w-1 h-6 bg-red-500 mr-3"></div>
-          <div>
-            <h2 className="text-2xl font-bold">DRIVER STANDINGS</h2>
-            <div className="tech-text text-xs text-red-500 tracking-wider">
-              {lastUpdated && `UPDATED ${lastUpdated.toLocaleTimeString()} • `}
-              CURRENT SEASON
-            </div>
-          </div>
-        </div>
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className={`tech-text text-xs px-4 py-2 border border-red-500/30 hover:border-red-500 hover:bg-red-500/10 transition-all duration-200 tech-corner flex items-center ${
-            refreshing ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-        >
-          {refreshing ? (
-            <>
-              <div className="w-3 h-3 border-t-transparent border border-red-500 rounded-full animate-spin mr-2"></div>
-              UPDATING
-            </>
-          ) : (
-            "REFRESH DATA"
-          )}
-        </button>
-      </div>
+      <SectionHeader
+        lastUpdated={lastUpdated}
+        onRefresh={refresh}
+        refreshing={refreshing}
+      />
 
       <div className="tech-card tech-corner overflow-hidden">
         <div className="overflow-x-auto custom-scrollbar max-h-[500px]">
           <table className="w-full">
             <thead className="sticky top-0 bg-[#0A0F1B] z-10">
               <tr className="border-b border-red-500/20">
-                <th className="py-4 px-6 text-left tech-text text-xs text-red-500 tracking-wider">
-                  POS
-                </th>
-                <th className="py-4 px-6 text-left tech-text text-xs text-red-500 tracking-wider">
-                  DRIVER
-                </th>
-                <th className="py-4 px-6 text-left tech-text text-xs text-red-500 tracking-wider">
-                  TEAM
-                </th>
-                <th className="py-4 px-6 text-right tech-text text-xs text-red-500 tracking-wider">
-                  WINS
-                </th>
-                <th className="py-4 px-6 text-right tech-text text-xs text-red-500 tracking-wider">
-                  POINTS
-                </th>
+                {["POS", "DRIVER", "TEAM", "WINS", "POINTS"].map((col, i) => (
+                  <th
+                    key={col}
+                    className={`py-4 px-6 tech-text text-xs text-red-500 tracking-wider ${
+                      i >= 3 ? "text-right" : "text-left"
+                    }`}
+                  >
+                    {col}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1E232F]/30">
-              {displayedStandings.map((driver, index) => (
+              {displayed.map((driver, index) => (
                 <tr
-                  key={index}
+                  key={driver.Driver?.driverId ?? index}
                   className={`${
                     index < 3
                       ? "bg-red-500/5"
@@ -242,15 +135,7 @@ const DriverStandings = () => {
                 >
                   <td className="py-4 px-6 whitespace-nowrap">
                     <div
-                      className={`w-8 h-8 flex items-center justify-center border ${
-                        index === 0
-                          ? "border-yellow-500 text-yellow-500"
-                          : index === 1
-                          ? "border-gray-400 text-gray-400"
-                          : index === 2
-                          ? "border-amber-700 text-amber-700"
-                          : "border-red-500/30 text-gray-400"
-                      }`}
+                      className={`w-8 h-8 flex items-center justify-center border ${positionClass(index)}`}
                     >
                       <span className="tech-text text-sm">
                         {driver.position}
@@ -262,11 +147,11 @@ const DriverStandings = () => {
                       <div
                         className="w-1 h-10 mr-4"
                         style={{
-                          backgroundColor: getTeamColor(
+                          backgroundColor: getTeamHexColor(
                             driver.Constructor?.name
                           ),
                         }}
-                      ></div>
+                      />
                       <div>
                         <div className="font-medium">
                           {driver.Driver?.givenName} {driver.Driver?.familyName}
@@ -279,7 +164,7 @@ const DriverStandings = () => {
                   </td>
                   <td className="py-4 px-6 whitespace-nowrap">
                     <span
-                      className={`px-3 py-1 text-xs tech-text font-bold ${getTeamTextColor(
+                      className={`px-3 py-1 text-xs tech-text font-bold ${getTeamTextClass(
                         driver.Constructor?.name
                       )}`}
                     >
@@ -305,12 +190,10 @@ const DriverStandings = () => {
 
       <div className="flex justify-center mt-6">
         <button
-          onClick={() => setShowAllDrivers(!showAllDrivers)}
+          onClick={() => setShowAll(!showAll)}
           className="tech-text text-xs px-6 py-3 border border-red-500/30 hover:border-red-500 hover:bg-red-500/10 transition-all duration-200 tech-corner"
         >
-          {showAllDrivers
-            ? "SHOW TOP 5"
-            : `SHOW ALL DRIVERS (${standings.length})`}
+          {showAll ? "SHOW TOP 5" : `SHOW ALL DRIVERS (${standings.length})`}
         </button>
       </div>
     </section>

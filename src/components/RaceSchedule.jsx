@@ -1,112 +1,74 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { getRaceSchedule } from "../api/f1Service";
+import { useFetchData } from "../hooks/useFetchData";
+import {
+  formatDate,
+  formatTime,
+  isPastRace,
+  getDaysUntilRace,
+  getNextRace,
+  groupRacesByMonth,
+} from "../utils/raceUtils";
+
+const validateRaces = (races) =>
+  Array.isArray(races) &&
+  races.length > 0 &&
+  races.every(
+    (r) =>
+      r?.season &&
+      r?.round &&
+      r?.raceName &&
+      r?.date &&
+      r?.Circuit?.circuitName &&
+      r?.Circuit?.Location?.locality &&
+      r?.Circuit?.Location?.country
+  );
 
 const RaceSchedule = () => {
-  const [races, setRaces] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [seasonYear, setSeasonYear] = useState(new Date().getFullYear());
-  const [lastUpdated, setLastUpdated] = useState(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { data: races, loading, error, refreshing, lastUpdated, refresh } =
+    useFetchData(getRaceSchedule, validateRaces);
 
-  const fetchRaces = async (isManualRefresh = false) => {
-    try {
-      if (isManualRefresh) {
-        setIsRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-
-      // Use the current year
-      const currentYear = new Date().getFullYear();
-      setSeasonYear(currentYear);
-
-      console.log("Fetching race schedule for year:", currentYear);
-      const data = await getRaceSchedule(currentYear);
-      console.log("Race schedule data received:", data);
-      console.log("Data type:", typeof data, Array.isArray(data));
-
-      if (data === "No Data Fetched") {
-        console.log("No data fetched from API");
-        setError("No Data Fetched");
-        setRaces([]);
-      } else if (data && Array.isArray(data) && data.length > 0) {
-        console.log(`Received ${data.length} races, first race:`, data[0]);
-
-        // Verify that the data has the expected structure
-        const hasValidStructure = data.every(
-          (race) =>
-            race &&
-            race.season &&
-            race.round &&
-            race.raceName &&
-            race.date &&
-            race.Circuit &&
-            race.Circuit.circuitName &&
-            race.Circuit.Location &&
-            race.Circuit.Location.locality &&
-            race.Circuit.Location.country
-        );
-
-        if (!hasValidStructure) {
-          console.error("Race data has invalid structure:", data[0]);
-          setError("Invalid data structure");
-          setRaces([]);
-          setLoading(false);
-          setIsRefreshing(false);
-          return;
-        }
-
-        // The OpenF1 API already returns dates in the correct format
-        // and our service handles year adjustments, so we can use the data directly
-        setRaces(data);
-
-        // Check if data is from previous season
-        if (data[0].season < currentYear) {
-          console.log(`Data is from previous season: ${data[0].season}`);
-          setError(`Showing data from ${data[0].season} season`);
-          setSeasonYear(data[0].season);
-        } else {
-          console.log("Data is from current season");
-          setError(null);
-        }
-
-        setLastUpdated(new Date());
-      } else {
-        console.warn("No race schedule data returned or empty array");
-        console.warn("Data received:", data);
-        setError("No data fetched");
-        setRaces([]);
-      }
-
-      if (isManualRefresh) {
-        setIsRefreshing(false);
-      } else {
-        setLoading(false);
-      }
-    } catch (err) {
-      console.error("Error in race schedule:", err);
-      setError("Failed to load race schedule");
-      setRaces([]);
-      setIsRefreshing(false);
-      setLoading(false);
-    }
-  };
-
-  const handleRefresh = () => {
-    fetchRaces(true);
-  };
-
+  // Auto-refresh every 5 minutes
   useEffect(() => {
-    fetchRaces();
-
-    // Set up auto-refresh every 5 minutes
-    const refreshInterval = setInterval(() => {
-      fetchRaces(true);
-    }, 5 * 60 * 1000);
-
-    return () => clearInterval(refreshInterval);
+    const interval = setInterval(() => refresh(), 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
+
+  const currentYear = new Date().getFullYear();
+  const seasonYear = races?.[0]?.season ?? currentYear;
+  const prevSeasonNote =
+    seasonYear < currentYear ? `Showing ${seasonYear} season` : null;
+
+  const SectionHeader = () => (
+    <div className="mb-6 flex items-center justify-between">
+      <div className="flex items-center">
+        <div className="w-1 h-6 bg-red-500 mr-3"></div>
+        <div>
+          <h2 className="text-2xl font-bold">RACE CALENDAR</h2>
+          <div className="tech-text text-xs text-red-500 tracking-wider">
+            {prevSeasonNote ? `${prevSeasonNote.toUpperCase()} • ` : ""}
+            {seasonYear} SEASON
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-col items-end">
+        <button
+          onClick={refresh}
+          disabled={refreshing}
+          className={`tech-button px-3 py-1 text-xs ${
+            refreshing ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+        >
+          {refreshing ? "REFRESHING..." : "REFRESH"}
+        </button>
+        {lastUpdated && (
+          <div className="text-xs text-gray-500 mt-1">
+            Updated: {lastUpdated.toLocaleTimeString()}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   if (loading)
     return (
@@ -121,29 +83,10 @@ const RaceSchedule = () => {
       </div>
     );
 
-  if (error || races.length === 0)
+  if (error || !races?.length)
     return (
       <section id="schedule" className="h-full sticky top-24">
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="w-1 h-6 bg-red-500 mr-3"></div>
-            <div>
-              <h2 className="text-2xl font-bold">RACE CALENDAR</h2>
-              <div className="tech-text text-xs text-red-500 tracking-wider">
-                {seasonYear} SEASON
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className={`tech-button px-3 py-1 text-xs ${
-              isRefreshing ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-          >
-            {isRefreshing ? "REFRESHING..." : "REFRESH"}
-          </button>
-        </div>
+        <SectionHeader />
         <div className="tech-card p-6 h-[calc(100%-100px)] flex items-center justify-center tech-corner">
           <div className="text-center">
             <div className="w-12 h-12 mx-auto mb-4 border border-red-500/30 rounded-sm flex items-center justify-center">
@@ -173,142 +116,12 @@ const RaceSchedule = () => {
       </section>
     );
 
-  // Function to format date
-  const formatDate = (dateString, timeString) => {
-    try {
-      if (!dateString) return "TBD";
-      // Handle different date formats
-      let date;
-      if (typeof dateString === "string" && dateString.includes("T")) {
-        // ISO format with time
-        date = new Date(dateString);
-      } else if (timeString) {
-        // Separate date and time
-        date = new Date(`${dateString}T${timeString || "00:00:00Z"}`);
-      } else {
-        // Just date
-        date = new Date(dateString);
-      }
-
-      return new Intl.DateTimeFormat("en-GB", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      }).format(date);
-    } catch (e) {
-      console.error("Error formatting date:", e, dateString, timeString);
-      return "Date TBD";
-    }
-  };
-
-  // Function to format time
-  const formatTime = (dateString, timeString) => {
-    try {
-      if (!dateString) return "";
-
-      // Handle different time formats
-      let date;
-      if (typeof dateString === "string" && dateString.includes("T")) {
-        // ISO format with time
-        date = new Date(dateString);
-      } else if (timeString) {
-        // Separate date and time
-        date = new Date(`${dateString}T${timeString}`);
-      } else {
-        // No time available
-        return "";
-      }
-
-      return new Intl.DateTimeFormat("en-GB", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }).format(date);
-    } catch (e) {
-      console.error("Error formatting time:", e, dateString, timeString);
-      return "";
-    }
-  };
-
-  // Function to check if race is in the past
-  const isPastRace = (dateString) => {
-    if (!dateString) return false;
-    try {
-      const raceDate = new Date(dateString);
-      const today = new Date();
-      return raceDate < today;
-    } catch (e) {
-      return false;
-    }
-  };
-
-  // Function to get next race
-  const getNextRace = () => {
-    const today = new Date();
-    return races.find((race) => new Date(race.date) > today) || null;
-  };
-
-  const nextRace = getNextRace();
-
-  // Calculate days until next race
-  const getDaysUntilRace = (raceDate) => {
-    const today = new Date();
-    const race = new Date(raceDate);
-    const diffTime = Math.abs(race - today);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  // Group races by month
-  const groupedRaces = races.reduce((acc, race) => {
-    try {
-      const date = new Date(race.date);
-      const month = date.toLocaleString("default", { month: "long" });
-
-      if (!acc[month]) {
-        acc[month] = [];
-      }
-
-      acc[month].push(race);
-    } catch (e) {
-      // If date parsing fails, add to "Unknown" group
-      if (!acc["Unknown"]) {
-        acc["Unknown"] = [];
-      }
-      acc["Unknown"].push(race);
-    }
-
-    return acc;
-  }, {});
+  const nextRace = getNextRace(races);
+  const groupedRaces = groupRacesByMonth(races);
 
   return (
     <section id="schedule" className="h-full sticky top-24">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center">
-          <div className="w-1 h-6 bg-red-500 mr-3"></div>
-          <div>
-            <h2 className="text-2xl font-bold">RACE CALENDAR</h2>
-            <div className="tech-text text-xs text-red-500 tracking-wider">
-              {seasonYear} SEASON
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-col items-end">
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className={`tech-button px-3 py-1 text-xs ${
-              isRefreshing ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-          >
-            {isRefreshing ? "REFRESHING..." : "REFRESH"}
-          </button>
-          {lastUpdated && (
-            <div className="text-xs text-gray-500 mt-1">
-              Updated: {lastUpdated.toLocaleTimeString()}
-            </div>
-          )}
-        </div>
-      </div>
+      <SectionHeader />
 
       {nextRace && (
         <div className="mb-6 tech-card tech-corner tech-scan">
