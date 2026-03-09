@@ -1,4 +1,6 @@
-export const formatDate = (dateString, timeString) => {
+import type { Race } from "../types/f1";
+
+export const formatDate = (dateString: string | undefined, timeString: string | undefined): string => {
   try {
     if (!dateString) return "TBD";
     const date =
@@ -15,7 +17,7 @@ export const formatDate = (dateString, timeString) => {
   }
 };
 
-export const formatTime = (dateString, timeString) => {
+export const formatTime = (dateString: string | undefined, timeString: string | undefined): string => {
   try {
     if (!dateString) return "";
     if (!timeString && !dateString.includes("T")) return "";
@@ -31,7 +33,7 @@ export const formatTime = (dateString, timeString) => {
   }
 };
 
-export const isPastRace = (dateString) => {
+export const isPastRace = (dateString: string | undefined): boolean => {
   if (!dateString) return false;
   try {
     return new Date(dateString) < new Date();
@@ -40,18 +42,18 @@ export const isPastRace = (dateString) => {
   }
 };
 
-export const getDaysUntilRace = (raceDate) => {
-  const diffMs = Math.abs(new Date(raceDate) - new Date());
+export const getDaysUntilRace = (raceDate: string): number => {
+  const diffMs = Math.abs(new Date(raceDate).getTime() - new Date().getTime());
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 };
 
-export const getNextRace = (races) => {
+export const getNextRace = (races: Race[]): Race | null => {
   const today = new Date();
   return races.find((race) => new Date(race.date) > today) ?? null;
 };
 
-export const groupRacesByMonth = (races) =>
-  races.reduce((acc, race) => {
+export const groupRacesByMonth = (races: Race[]): Record<string, Race[]> =>
+  races.reduce<Record<string, Race[]>>((acc, race) => {
     try {
       const month = new Date(race.date).toLocaleString("default", {
         month: "long",

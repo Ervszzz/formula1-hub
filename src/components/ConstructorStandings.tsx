@@ -1,21 +1,27 @@
-import React, { useState } from "react";
-import { getDriverStandings } from "../api/f1Service";
+import { getConstructorStandings } from "../api/f1Service";
 import { useFetchData } from "../hooks/useFetchData";
 import { getTeamHexColor, getTeamTextClass } from "../utils/teamColors";
+import type { ConstructorStanding } from "../types/f1";
 
-const positionClass = (index) => {
+const positionClass = (index: number): string => {
   if (index === 0) return "border-yellow-500 text-yellow-500";
   if (index === 1) return "border-gray-400 text-gray-400";
   if (index === 2) return "border-amber-700 text-amber-700";
   return "border-red-500/30 text-gray-400";
 };
 
-const SectionHeader = ({ lastUpdated, onRefresh, refreshing }) => (
+interface SectionHeaderProps {
+  lastUpdated: Date | null;
+  onRefresh: () => void;
+  refreshing: boolean;
+}
+
+const SectionHeader = ({ lastUpdated, onRefresh, refreshing }: SectionHeaderProps) => (
   <div className="mb-6 flex items-center justify-between">
     <div className="flex items-center">
       <div className="w-1 h-6 bg-red-500 mr-3"></div>
       <div>
-        <h2 className="text-2xl font-bold">DRIVER STANDINGS</h2>
+        <h2 className="text-2xl font-bold">CONSTRUCTOR STANDINGS</h2>
         <div className="tech-text text-xs text-red-500 tracking-wider">
           {lastUpdated && `UPDATED ${lastUpdated.toLocaleTimeString()} • `}
           CURRENT SEASON
@@ -41,28 +47,70 @@ const SectionHeader = ({ lastUpdated, onRefresh, refreshing }) => (
   </div>
 );
 
-const DriverStandings = () => {
-  const { data: standings, loading, error, refreshing, lastUpdated, refresh } =
-    useFetchData(getDriverStandings, Array.isArray);
-  const [showAll, setShowAll] = useState(false);
-
-  if (loading)
-    return (
-      <div className="flex justify-center items-center py-20">
-        <div className="relative w-16 h-16">
-          <div className="absolute top-0 left-0 w-full h-full border-2 border-red-500/50 rounded-sm opacity-25 animate-ping"></div>
-          <div className="absolute top-0 left-0 w-full h-full border-2 border-t-transparent border-red-500 rounded-sm animate-spin"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="tech-text text-red-500 text-xs">LOADING</span>
-          </div>
+const ConstructorStandingsSkeleton = () => (
+  <section id="constructors" className="mb-16 pt-8">
+    <div className="mb-6 flex items-center justify-between">
+      <div className="flex items-center">
+        <div className="w-1 h-6 bg-red-500 mr-3"></div>
+        <div>
+          <div className="h-7 w-56 bg-gray-700/30 animate-pulse rounded"></div>
+          <div className="h-3 w-32 bg-gray-700/30 animate-pulse rounded mt-1"></div>
         </div>
       </div>
-    );
+      <div className="h-9 w-28 bg-gray-700/30 animate-pulse rounded"></div>
+    </div>
+    <div className="tech-card tech-corner overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-red-500/20">
+              {["POS", "CONSTRUCTOR", "WINS", "POINTS"].map((col, i) => (
+                <th
+                  key={col}
+                  className={`py-4 px-6 tech-text text-xs text-red-500 tracking-wider ${i >= 2 ? "text-right" : "text-left"}`}
+                >
+                  {col}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#1E232F]/30">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <tr key={i} className="animate-pulse">
+                <td className="py-4 px-6">
+                  <div className="w-8 h-8 bg-gray-700/30 rounded"></div>
+                </td>
+                <td className="py-4 px-6">
+                  <div className="flex items-center">
+                    <div className="w-1 h-10 bg-gray-700/30 mr-4"></div>
+                    <div className="h-4 w-32 bg-gray-700/30 rounded"></div>
+                  </div>
+                </td>
+                <td className="py-4 px-6 text-right">
+                  <div className="h-4 w-6 bg-gray-700/30 rounded ml-auto"></div>
+                </td>
+                <td className="py-4 px-6 text-right">
+                  <div className="h-4 w-12 bg-gray-700/30 rounded ml-auto"></div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+);
+
+const ConstructorStandings = () => {
+  const { data: standings, loading, error, refreshing, lastUpdated, refresh } =
+    useFetchData<ConstructorStanding[]>(getConstructorStandings, Array.isArray);
+
+  if (loading) return <ConstructorStandingsSkeleton />;
 
   if (error && !standings)
     return (
-      <section id="standings" className="mb-16 pt-8">
-        <SectionHeader onRefresh={refresh} refreshing={refreshing} />
+      <section id="constructors" className="mb-16 pt-8">
+        <SectionHeader onRefresh={refresh} refreshing={refreshing} lastUpdated={null} />
         <div className="tech-card p-6 flex items-center justify-center tech-corner">
           <div className="text-center">
             <div className="w-12 h-12 mx-auto mb-4 border border-red-500/30 rounded-sm flex items-center justify-center">
@@ -94,10 +142,8 @@ const DriverStandings = () => {
 
   if (!standings?.length) return null;
 
-  const displayed = showAll ? standings : standings.slice(0, 5);
-
   return (
-    <section id="standings" className="mb-16 pt-8">
+    <section id="constructors" className="mb-16 pt-8">
       <SectionHeader
         lastUpdated={lastUpdated}
         onRefresh={refresh}
@@ -109,11 +155,11 @@ const DriverStandings = () => {
           <table className="w-full">
             <thead className="sticky top-0 bg-[#0A0F1B] z-10">
               <tr className="border-b border-red-500/20">
-                {["POS", "DRIVER", "TEAM", "WINS", "POINTS"].map((col, i) => (
+                {["POS", "CONSTRUCTOR", "WINS", "POINTS"].map((col, i) => (
                   <th
                     key={col}
                     className={`py-4 px-6 tech-text text-xs text-red-500 tracking-wider ${
-                      i >= 3 ? "text-right" : "text-left"
+                      i >= 2 ? "text-right" : "text-left"
                     }`}
                   >
                     {col}
@@ -122,9 +168,9 @@ const DriverStandings = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1E232F]/30">
-              {displayed.map((driver, index) => (
+              {standings.map((entry, index) => (
                 <tr
-                  key={driver.Driver?.driverId ?? index}
+                  key={entry.Constructor?.constructorId ?? index}
                   className={`${
                     index < 3
                       ? "bg-red-500/5"
@@ -138,7 +184,7 @@ const DriverStandings = () => {
                       className={`w-8 h-8 flex items-center justify-center border ${positionClass(index)}`}
                     >
                       <span className="tech-text text-sm">
-                        {driver.position}
+                        {entry.position}
                       </span>
                     </div>
                   </td>
@@ -148,37 +194,27 @@ const DriverStandings = () => {
                         className="w-1 h-10 mr-4"
                         style={{
                           backgroundColor: getTeamHexColor(
-                            driver.Constructor?.name
+                            entry.Constructor?.name
                           ),
                         }}
                       />
-                      <div>
-                        <div className="font-medium">
-                          {driver.Driver?.givenName} {driver.Driver?.familyName}
-                        </div>
-                        <div className="tech-text text-xs text-gray-400">
-                          {driver.Driver?.nationality}
-                        </div>
-                      </div>
+                      <span
+                        className={`px-3 py-1 text-xs tech-text font-bold ${getTeamTextClass(
+                          entry.Constructor?.name
+                        )}`}
+                      >
+                        {entry.Constructor?.name}
+                      </span>
                     </div>
-                  </td>
-                  <td className="py-4 px-6 whitespace-nowrap">
-                    <span
-                      className={`px-3 py-1 text-xs tech-text font-bold ${getTeamTextClass(
-                        driver.Constructor?.name
-                      )}`}
-                    >
-                      {driver.Constructor?.name}
-                    </span>
                   </td>
                   <td className="py-4 px-6 text-right whitespace-nowrap">
                     <span className="tech-text text-gray-300">
-                      {driver.wins}
+                      {entry.wins}
                     </span>
                   </td>
                   <td className="py-4 px-6 text-right whitespace-nowrap">
                     <span className="font-bold text-white tech-glow">
-                      {driver.points}
+                      {entry.points}
                     </span>
                   </td>
                 </tr>
@@ -187,17 +223,8 @@ const DriverStandings = () => {
           </table>
         </div>
       </div>
-
-      <div className="flex justify-center mt-6">
-        <button
-          onClick={() => setShowAll(!showAll)}
-          className="tech-text text-xs px-6 py-3 border border-red-500/30 hover:border-red-500 hover:bg-red-500/10 transition-all duration-200 tech-corner"
-        >
-          {showAll ? "SHOW TOP 5" : `SHOW ALL DRIVERS (${standings.length})`}
-        </button>
-      </div>
     </section>
   );
 };
 
-export default DriverStandings;
+export default ConstructorStandings;
