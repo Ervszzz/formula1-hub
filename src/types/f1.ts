@@ -8,6 +8,7 @@ export interface Driver {
 export interface Constructor {
   constructorId: string;
   name: string;
+  nationality?: string;
 }
 
 export interface DriverStanding {
@@ -78,4 +79,17 @@ export interface ConstructorStanding {
   wins: number;
   Constructor: Constructor;
   season: number;
+}
+
+export interface QualifyingResult {
+  position: string;
+  Driver: {
+    givenName: string;
+    familyName: string;
+    code: string;
+  };
+  Constructor: { name: string };
+  Q1: string;
+  Q2?: string;
+  Q3?: string;
 }
