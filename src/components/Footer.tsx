@@ -13,7 +13,7 @@ const Footer = () => {
                 </span>
               </div>
               <h3 className="text-white text-xl font-bold tech-text tech-glow">
-                HUB
+                PULSE
               </h3>
             </div>
             <p className="mb-4 text-sm leading-relaxed">
@@ -179,7 +179,7 @@ const Footer = () => {
 
         <div className="mt-8 pt-8 border-t border-red-500/20 text-sm text-center">
           <p className="tech-text text-xs">
-            © {currentYear} FORMULA 1 HUB • THIS IS A FAN-MADE APPLICATION AND
+            © {currentYear} F1PULSE • THIS IS A FAN-MADE APPLICATION AND
             IS NOT AFFILIATED WITH FORMULA ONE GROUP
           </p>
           <p className="mt-2 text-xs text-gray-500">

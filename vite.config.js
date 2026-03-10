@@ -9,15 +9,15 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       manifest: {
-        name: "Formula 1 Hub",
-        short_name: "F1 Hub",
+        name: "F1Pulse",
+        short_name: "F1Pulse",
         description: "Real-time Formula 1 data interface",
         theme_color: "#080A0F",
         background_color: "#080A0F",
         display: "standalone",
         icons: [
           {
-            src: "/f1hub.svg",
+            src: "/f1pulse.svg",
             sizes: "any",
             type: "image/svg+xml",
             purpose: "any maskable",
