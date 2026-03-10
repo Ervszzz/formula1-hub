@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import SEO from "../components/SEO";
 
 const ConstructorStandings = lazy(
   () => import("../components/ConstructorStandings")
@@ -16,13 +17,20 @@ const CardSkeleton = () => (
 );
 
 const Constructors = () => (
-  <div className="w-full px-4 py-12 pt-24">
-    <div className="max-w-[1920px] mx-auto">
-      <Suspense fallback={<CardSkeleton />}>
-        <ConstructorStandings />
-      </Suspense>
+  <>
+    <SEO
+      title="Constructor Standings"
+      description="Current F1 constructor championship standings."
+      path="/constructors"
+    />
+    <div className="w-full px-4 py-12 pt-24">
+      <div className="max-w-[1920px] mx-auto">
+        <Suspense fallback={<CardSkeleton />}>
+          <ConstructorStandings />
+        </Suspense>
+      </div>
     </div>
-  </div>
+  </>
 );
 
 export default Constructors;

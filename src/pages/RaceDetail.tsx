@@ -4,6 +4,7 @@ import { getRaceResults, getQualifyingResults } from "../api/f1Service";
 import { useFetchData } from "../hooks/useFetchData";
 import { getTeamHexColor, getTeamTextClass } from "../utils/teamColors";
 import type { LastRaceData, QualifyingResult } from "../types/f1";
+import SEO from "../components/SEO";
 
 const positionClass = (index: number): string => {
   if (index === 0) return "border-yellow-500 text-yellow-500";
@@ -80,6 +81,11 @@ const RaceDetail = () => {
 
   return (
     <div className="w-full px-4 py-12 pt-24">
+      <SEO
+        title={raceData.raceName}
+        description={`Full results for the ${raceData.raceName} at ${raceData.Circuit?.circuitName}.`}
+        path={`/race/${season}/${round}`}
+      />
       <div className="max-w-5xl mx-auto">
         {/* Back link */}
         <Link
