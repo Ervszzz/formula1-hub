@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import SEO from "../components/SEO";
 
 const RaceSchedule = lazy(() => import("../components/RaceSchedule"));
 
@@ -14,13 +15,20 @@ const ScheduleSkeleton = () => (
 );
 
 const Schedule = () => (
-  <div className="w-full px-4 py-12 pt-24">
-    <div className="max-w-4xl mx-auto">
-      <Suspense fallback={<ScheduleSkeleton />}>
-        <RaceSchedule fullPage />
-      </Suspense>
+  <>
+    <SEO
+      title="Race Schedule"
+      description="Full Formula 1 race calendar with dates, circuits and locations."
+      path="/schedule"
+    />
+    <div className="w-full px-4 py-12 pt-24">
+      <div className="max-w-4xl mx-auto">
+        <Suspense fallback={<ScheduleSkeleton />}>
+          <RaceSchedule fullPage />
+        </Suspense>
+      </div>
     </div>
-  </div>
+  </>
 );
 
 export default Schedule;

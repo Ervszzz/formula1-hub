@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import SEO from "../components/SEO";
 
 const LastRaceResults = lazy(() => import("../components/LastRaceResults"));
 
@@ -14,13 +15,20 @@ const CardSkeleton = () => (
 );
 
 const Results = () => (
-  <div className="w-full px-4 py-12 pt-24">
-    <div className="max-w-[1920px] mx-auto">
-      <Suspense fallback={<CardSkeleton />}>
-        <LastRaceResults />
-      </Suspense>
+  <>
+    <SEO
+      title="Last Race Results"
+      description="Latest Formula 1 race results including podium, fastest lap and full classification."
+      path="/results"
+    />
+    <div className="w-full px-4 py-12 pt-24">
+      <div className="max-w-[1920px] mx-auto">
+        <Suspense fallback={<CardSkeleton />}>
+          <LastRaceResults />
+        </Suspense>
+      </div>
     </div>
-  </div>
+  </>
 );
 
 export default Results;

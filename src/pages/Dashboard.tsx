@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import LiveTiming from "../components/LiveTiming";
+import SEO from "../components/SEO";
 
 const LastRaceResults = lazy(() => import("../components/LastRaceResults"));
 const DriverStandings = lazy(() => import("../components/DriverStandings"));
@@ -20,6 +21,7 @@ const CardSkeleton = () => (
 const Dashboard = () => {
   return (
     <>
+      <SEO path="/" />
       {/* Hero */}
       <div className="relative overflow-hidden w-full">
         <div className="absolute inset-0 bg-[url('/f1-hero.jpg')] bg-cover bg-center opacity-10"></div>

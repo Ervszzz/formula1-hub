@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://formula1-hub.vercel.app/sitemap.xml
