@@ -1,4 +1,4 @@
-# Formula 1 Hub
+# F1Pulse
 
 A React-based web application that displays Formula 1 data including driver standings, race schedule, and last race results with a modern, tech-inspired UI.
 
@@ -30,8 +30,8 @@ A React-based web application that displays Formula 1 data including driver stan
 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/formula1-hub.git
-cd formula1-hub
+git clone https://github.com/yourusername/f1pulse.git
+cd f1pulse
 ```
 
 2. Install dependencies

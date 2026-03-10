@@ -36,7 +36,7 @@ const Dashboard = () => {
               TELEMETRY ACTIVE
             </div>
             <h1 className="text-6xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-red-700 glow-text">
-              FORMULA 1<span className="text-white text-4xl ml-2">HUB</span>
+              F1<span className="text-white text-4xl ml-2">PULSE</span>
             </h1>
             <div className="flex items-center justify-center mb-6">
               <div className="h-px w-16 bg-gradient-to-r from-transparent to-red-500/50"></div>

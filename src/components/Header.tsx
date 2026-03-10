@@ -65,7 +65,7 @@ const Header = () => {
           </div>
           <div className="flex flex-col">
             <h1 className="text-xl font-bold leading-none">
-              <span className="text-white">HUB</span>
+              <span className="text-white">PULSE</span>
             </h1>
             <div className="tech-text text-red-500 text-[10px] leading-none">
               {formattedTime}
