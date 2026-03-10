@@ -1,6 +1,8 @@
 import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import { getRaceSchedule } from "../api/f1Service";
 import { useFetchData } from "../hooks/useFetchData";
+import { useSeason } from "../context/SeasonContext";
 import {
   formatDate,
   formatTime,
@@ -26,18 +28,27 @@ const validateRaces = (races: Race[]): boolean =>
       r?.Circuit?.Location?.country
   );
 
-const RaceSchedule = () => {
+interface RaceScheduleProps {
+  fullPage?: boolean;
+}
+
+const RaceSchedule = ({ fullPage }: RaceScheduleProps) => {
+  const { season } = useSeason();
   const { data: races, loading, error, refreshing, lastUpdated, refresh } =
-    useFetchData<Race[]>(getRaceSchedule, validateRaces);
+    useFetchData<Race[]>(
+      getRaceSchedule as (...args: unknown[]) => Promise<Race[] | null>,
+      validateRaces,
+      [season]
+    );
 
   // Auto-refresh every 5 minutes
   useEffect(() => {
     const interval = setInterval(() => refresh(), 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const currentYear = new Date().getFullYear();
-  const seasonYear = races?.[0]?.season ?? currentYear;
+  const seasonYear = races?.[0]?.season ?? season;
   const prevSeasonNote =
     seasonYear < currentYear ? `Showing ${seasonYear} season` : null;
 
@@ -111,7 +122,7 @@ const RaceSchedule = () => {
   const groupedRaces = groupRacesByMonth(races);
 
   return (
-    <section id="schedule" className="h-full sticky top-24">
+    <section id="schedule" className={fullPage ? "" : "h-full sticky top-24"}>
       <SectionHeader />
 
       {nextRace && (
@@ -169,7 +180,11 @@ const RaceSchedule = () => {
         </div>
       )}
 
-      <div className="tech-card h-[calc(100vh-350px)] min-h-[400px] tech-corner">
+      <div
+        className={`tech-card tech-corner ${
+          fullPage ? "" : "h-[calc(100vh-350px)] min-h-[400px]"
+        }`}
+      >
         <div className="p-4 h-full overflow-y-auto custom-scrollbar">
           {Object.entries(groupedRaces).map(([month, monthRaces]) => (
             <div key={month} className="mb-6 last:mb-0">
@@ -177,58 +192,72 @@ const RaceSchedule = () => {
                 {month.toUpperCase()}
               </h3>
               <div className="space-y-2">
-                {monthRaces.map((race) => (
-                  <div
-                    key={`${race.season}-${race.round}`}
-                    className={`p-3 flex items-center ${
-                      isPastRace(race.date)
-                        ? "opacity-50"
-                        : race === nextRace
-                        ? "border border-red-500/30 bg-red-500/5"
-                        : "hover:bg-[#1A1F2A]/30 transition-colors duration-150"
-                    }`}
-                  >
-                    <div className="w-8 h-8 border border-red-500/30 bg-black flex items-center justify-center mr-3 flex-shrink-0">
-                      <span className="tech-text text-red-500 text-xs">
-                        {race.round}
-                      </span>
-                    </div>
-                    <div className="flex-grow min-w-0">
-                      <div className="flex justify-between items-start">
-                        <div className="truncate pr-2">
-                          <div className="font-medium flex items-center">
-                            {race.raceName}
-                            {race.hasSprint && (
-                              <span className="ml-2 px-1 py-0.5 text-[9px] tech-text border border-yellow-500/50 text-yellow-500">
-                                SPR
-                              </span>
-                            )}
+                {monthRaces.map((race) => {
+                  const past = isPastRace(race.date);
+                  const inner = (
+                    <div
+                      className={`p-3 flex items-center ${
+                        past
+                          ? "opacity-50"
+                          : race === nextRace
+                          ? "border border-red-500/30 bg-red-500/5"
+                          : "hover:bg-[#1A1F2A]/30 transition-colors duration-150"
+                      }`}
+                    >
+                      <div className="w-8 h-8 border border-red-500/30 bg-black flex items-center justify-center mr-3 flex-shrink-0">
+                        <span className="tech-text text-red-500 text-xs">
+                          {race.round}
+                        </span>
+                      </div>
+                      <div className="flex-grow min-w-0">
+                        <div className="flex justify-between items-start">
+                          <div className="truncate pr-2">
+                            <div className="font-medium flex items-center">
+                              {race.raceName}
+                              {race.hasSprint && (
+                                <span className="ml-2 px-1 py-0.5 text-[9px] tech-text border border-yellow-500/50 text-yellow-500">
+                                  SPR
+                                </span>
+                              )}
+                            </div>
+                            <div className="tech-text text-xs text-gray-400 truncate">
+                              {race.Circuit.circuitName}
+                            </div>
                           </div>
-                          <div className="tech-text text-xs text-gray-400 truncate">
-                            {race.Circuit.circuitName}
-                          </div>
-                        </div>
-                        <div className="text-right text-xs whitespace-nowrap">
-                          <div className="font-medium">
-                            {formatDate(race.date, race.time)}
-                          </div>
-                          <div className="tech-text text-red-500 text-[10px]">
-                            {formatTime(race.date, race.time)}
+                          <div className="text-right text-xs whitespace-nowrap">
+                            <div className="font-medium">
+                              {formatDate(race.date, race.time)}
+                            </div>
+                            <div className="tech-text text-red-500 text-[10px]">
+                              {formatTime(race.date, race.time)}
+                            </div>
                           </div>
                         </div>
                       </div>
+                      <div className="ml-3 flex-shrink-0">
+                        {past ? (
+                          <span className="w-2 h-2 bg-gray-500"></span>
+                        ) : race === nextRace ? (
+                          <span className="w-2 h-2 bg-red-500 tech-pulse"></span>
+                        ) : (
+                          <span className="w-2 h-2 border border-red-500/50"></span>
+                        )}
+                      </div>
                     </div>
-                    <div className="ml-3 flex-shrink-0">
-                      {isPastRace(race.date) ? (
-                        <span className="w-2 h-2 bg-gray-500"></span>
-                      ) : race === nextRace ? (
-                        <span className="w-2 h-2 bg-red-500 tech-pulse"></span>
-                      ) : (
-                        <span className="w-2 h-2 border border-red-500/50"></span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  );
+
+                  return past ? (
+                    <Link
+                      key={`${race.season}-${race.round}`}
+                      to={`/race/${race.season}/${race.round}`}
+                      className="block hover:opacity-80 transition-opacity"
+                    >
+                      {inner}
+                    </Link>
+                  ) : (
+                    <div key={`${race.season}-${race.round}`}>{inner}</div>
+                  );
+                })}
               </div>
             </div>
           ))}

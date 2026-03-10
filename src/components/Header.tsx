@@ -1,17 +1,27 @@
 import { useState, useEffect } from "react";
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useLocation } from "react-router-dom";
+import { useSeason } from "../context/SeasonContext";
+
+const CURRENT_YEAR = new Date().getFullYear();
+const SEASON_YEARS = Array.from(
+  { length: CURRENT_YEAR - 2010 + 1 },
+  (_, i) => CURRENT_YEAR - i
+);
 
 const NAV_ITEMS = [
+  { name: "HOME", path: "/" },
   { name: "STANDINGS", path: "/standings" },
+  { name: "CONSTRUCTORS", path: "/constructors" },
   { name: "SCHEDULE", path: "/schedule" },
   { name: "RESULTS", path: "/results" },
-  { name: "CONSTRUCTORS", path: "/constructors" },
 ];
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const { season, setSeason } = useSeason();
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -64,7 +74,7 @@ const Header = () => {
         </Link>
 
         {/* Desktop navigation */}
-        <nav className="hidden lg:flex items-center space-x-4">
+        <nav className="hidden lg:flex items-center space-x-2">
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.path}
@@ -75,16 +85,42 @@ const Header = () => {
                 }`
               }
             >
-              <span className="relative z-10">{item.name}</span>
-              <span className="absolute bottom-0 left-0 w-0 h-px bg-red-500 transition-all duration-300 group-hover:w-full"></span>
-              <span className="absolute top-0 right-0 w-0 h-px bg-red-500 transition-all duration-300 group-hover:w-full"></span>
+              {({ isActive }) => (
+                <>
+                  <span className="relative z-10">{item.name}</span>
+                  <span
+                    className={`absolute bottom-0 left-0 h-px bg-red-500 transition-all duration-300 ${
+                      isActive ? "w-full" : "w-0 group-hover:w-full"
+                    }`}
+                  ></span>
+                  <span
+                    className={`absolute top-0 right-0 h-px bg-red-500 transition-all duration-300 ${
+                      isActive ? "w-full" : "w-0 group-hover:w-full"
+                    }`}
+                  ></span>
+                </>
+              )}
             </NavLink>
           ))}
+
+          {/* Season selector */}
+          <select
+            value={season}
+            onChange={(e) => setSeason(e.target.value)}
+            className="ml-2 bg-black border border-red-500/30 hover:border-red-500 text-red-500 tech-text text-xs px-3 py-2 outline-none cursor-pointer transition-colors duration-200"
+          >
+            {SEASON_YEARS.map((yr) => (
+              <option key={yr} value={yr} className="bg-[#080A0F]">
+                {yr}
+              </option>
+            ))}
+          </select>
+
           <a
             href="https://www.formula1.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="ml-4 px-5 py-2 border border-red-500/50 bg-red-500/10 text-red-500 tech-text text-sm tracking-wider hover:bg-red-500/20 transition-all duration-200 tech-corner"
+            className="ml-2 px-5 py-2 border border-red-500/50 bg-red-500/10 text-red-500 tech-text text-sm tracking-wider hover:bg-red-500/20 transition-all duration-200 tech-corner"
           >
             OFFICIAL F1
           </a>
@@ -119,25 +155,45 @@ const Header = () => {
       {/* Mobile navigation */}
       <div
         className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-          isMenuOpen ? "max-h-60 opacity-100" : "max-h-0 opacity-0"
+          isMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <div className="bg-[#0A0D14] border-t border-red-500/20 px-4 py-2 mt-2">
           <div className="flex flex-col space-y-1">
             {NAV_ITEMS.map((item) => (
-              <NavLink
+              <Link
                 key={item.path}
                 to={item.path}
-                className={({ isActive }) =>
-                  `px-4 py-3 tech-text text-sm tracking-wider transition-colors duration-200 data-line ${
-                    isActive ? "text-red-500" : "hover:text-red-500"
-                  }`
-                }
+                className={`px-4 py-3 tech-text text-sm tracking-wider transition-colors duration-200 data-line ${
+                  location.pathname === item.path
+                    ? "text-red-500"
+                    : "hover:text-red-500"
+                }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 {item.name}
-              </NavLink>
+              </Link>
             ))}
+            {/* Mobile season selector */}
+            <div className="px-4 py-2">
+              <div className="tech-text text-xs text-gray-500 mb-1 tracking-wider">
+                SEASON
+              </div>
+              <select
+                value={season}
+                onChange={(e) => {
+                  setSeason(e.target.value);
+                  setIsMenuOpen(false);
+                }}
+                className="w-full bg-black border border-red-500/30 text-red-500 tech-text text-xs px-3 py-2 outline-none"
+              >
+                {SEASON_YEARS.map((yr) => (
+                  <option key={yr} value={yr} className="bg-[#080A0F]">
+                    {yr}
+                  </option>
+                ))}
+              </select>
+            </div>
             <a
               href="https://www.formula1.com"
               target="_blank"

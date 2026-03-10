@@ -3,6 +3,10 @@
     {
       "source": "/api/jolpica/:path*",
       "destination": "https://api.jolpi.ca/ergast/:path*"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [

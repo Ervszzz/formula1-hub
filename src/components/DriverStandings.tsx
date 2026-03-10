@@ -3,6 +3,7 @@ import { getDriverStandings } from "../api/f1Service";
 import { useFetchData } from "../hooks/useFetchData";
 import { getTeamHexColor, getTeamTextClass } from "../utils/teamColors";
 import StandingsSkeleton from "./skeletons/StandingsSkeleton";
+import { useSeason } from "../context/SeasonContext";
 import type { DriverStanding } from "../types/f1";
 
 const positionClass = (index: number): string => {
@@ -16,9 +17,15 @@ interface SectionHeaderProps {
   lastUpdated: Date | null;
   onRefresh: () => void;
   refreshing: boolean;
+  season: number;
 }
 
-const SectionHeader = ({ lastUpdated, onRefresh, refreshing }: SectionHeaderProps) => (
+const SectionHeader = ({
+  lastUpdated,
+  onRefresh,
+  refreshing,
+  season,
+}: SectionHeaderProps) => (
   <div className="mb-6 flex items-center justify-between">
     <div className="flex items-center">
       <div className="w-1 h-6 bg-red-500 mr-3"></div>
@@ -26,7 +33,7 @@ const SectionHeader = ({ lastUpdated, onRefresh, refreshing }: SectionHeaderProp
         <h2 className="text-2xl font-bold">DRIVER STANDINGS</h2>
         <div className="tech-text text-xs text-red-500 tracking-wider">
           {lastUpdated && `UPDATED ${lastUpdated.toLocaleTimeString()} • `}
-          CURRENT SEASON
+          {season} SEASON
         </div>
       </div>
     </div>
@@ -50,16 +57,27 @@ const SectionHeader = ({ lastUpdated, onRefresh, refreshing }: SectionHeaderProp
 );
 
 const DriverStandings = () => {
+  const { season } = useSeason();
   const { data: standings, loading, error, refreshing, lastUpdated, refresh } =
-    useFetchData<DriverStanding[]>(getDriverStandings, Array.isArray);
+    useFetchData<DriverStanding[]>(
+      getDriverStandings as (...args: unknown[]) => Promise<DriverStanding[] | null>,
+      Array.isArray,
+      [season]
+    );
   const [showAll, setShowAll] = useState(false);
+  const [search, setSearch] = useState("");
 
   if (loading) return <StandingsSkeleton />;
 
   if (error && !standings)
     return (
       <section id="standings" className="mb-16 pt-8">
-        <SectionHeader onRefresh={refresh} refreshing={refreshing} lastUpdated={null} />
+        <SectionHeader
+          onRefresh={refresh}
+          refreshing={refreshing}
+          lastUpdated={null}
+          season={season}
+        />
         <div className="tech-card p-6 flex items-center justify-center tech-corner">
           <div className="text-center">
             <div className="w-12 h-12 mx-auto mb-4 border border-red-500/30 rounded-sm flex items-center justify-center">
@@ -91,7 +109,15 @@ const DriverStandings = () => {
 
   if (!standings?.length) return null;
 
-  const displayed = showAll ? standings : standings.slice(0, 5);
+  const filtered = standings.filter((driver) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    const name = `${driver.Driver?.givenName} ${driver.Driver?.familyName}`.toLowerCase();
+    const team = (driver.Constructor?.name ?? "").toLowerCase();
+    return name.includes(q) || team.includes(q);
+  });
+
+  const displayed = showAll ? filtered : filtered.slice(0, 5);
 
   return (
     <section id="standings" className="mb-16 pt-8">
@@ -99,6 +125,16 @@ const DriverStandings = () => {
         lastUpdated={lastUpdated}
         onRefresh={refresh}
         refreshing={refreshing}
+        season={season}
+      />
+
+      {/* Search filter */}
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="SEARCH DRIVER OR TEAM..."
+        className="w-full bg-black/50 border border-red-500/30 focus:border-red-500 px-4 py-2 text-sm text-white placeholder-gray-500 outline-none tech-text mb-4"
       />
 
       <div className="tech-card tech-corner overflow-hidden">
@@ -190,7 +226,7 @@ const DriverStandings = () => {
           onClick={() => setShowAll(!showAll)}
           className="tech-text text-xs px-6 py-3 border border-red-500/30 hover:border-red-500 hover:bg-red-500/10 transition-all duration-200 tech-corner"
         >
-          {showAll ? "SHOW TOP 5" : `SHOW ALL DRIVERS (${standings.length})`}
+          {showAll ? "SHOW TOP 5" : `SHOW ALL DRIVERS (${filtered.length})`}
         </button>
       </div>
     </section>

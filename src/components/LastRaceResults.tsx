@@ -3,6 +3,7 @@ import { getLastRaceResults } from "../api/f1Service";
 import { useFetchData } from "../hooks/useFetchData";
 import { getTeamHexColor, getTeamTextClass } from "../utils/teamColors";
 import ResultsSkeleton from "./skeletons/ResultsSkeleton";
+import { useSeason } from "../context/SeasonContext";
 import type { LastRaceData } from "../types/f1";
 
 const validateResults = (data: LastRaceData): boolean =>
@@ -49,7 +50,15 @@ interface SectionHeaderProps {
   onToggleAll: () => void;
 }
 
-const SectionHeader = ({ results, error, lastUpdated, onRefresh, refreshing, showAll, onToggleAll }: SectionHeaderProps) => (
+const SectionHeader = ({
+  results,
+  error,
+  lastUpdated,
+  onRefresh,
+  refreshing,
+  showAll,
+  onToggleAll,
+}: SectionHeaderProps) => (
   <div className="flex justify-between items-center mb-6">
     <div className="flex items-center">
       <div className="w-1 h-6 bg-red-500 mr-3"></div>
@@ -90,8 +99,13 @@ const SectionHeader = ({ results, error, lastUpdated, onRefresh, refreshing, sho
 );
 
 const LastRaceResults = () => {
+  const { season } = useSeason();
   const { data: results, loading, error, refreshing, lastUpdated, refresh } =
-    useFetchData<LastRaceData>(getLastRaceResults, validateResults);
+    useFetchData<LastRaceData>(
+      getLastRaceResults as (...args: unknown[]) => Promise<LastRaceData | null>,
+      validateResults,
+      [season]
+    );
   const [showAll, setShowAll] = useState(false);
   const [showAllDrivers, setShowAllDrivers] = useState(false);
 

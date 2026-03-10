@@ -1,5 +1,11 @@
 import axios from "axios";
-import type { DriverStanding, Race, LastRaceData, ConstructorStanding } from "../types/f1";
+import type {
+  DriverStanding,
+  Race,
+  LastRaceData,
+  ConstructorStanding,
+  QualifyingResult,
+} from "../types/f1";
 
 const isDevelopment =
   window.location.hostname === "localhost" ||
@@ -18,10 +24,13 @@ const CACHE_TTL = 5 * 60 * 1000;
 
 function getCached<T>(key: string): T | null {
   try {
-    const item = localStorage.getItem(key);
-    if (!item) return null;
-    const { data, timestamp } = JSON.parse(item) as { data: T; timestamp: number };
-    if (Date.now() - timestamp > CACHE_TTL) return null;
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const { data, ts } = JSON.parse(raw) as { data: T; ts: number };
+    if (Date.now() - ts > CACHE_TTL) {
+      localStorage.removeItem(key);
+      return null;
+    }
     return data;
   } catch {
     return null;
@@ -30,12 +39,17 @@ function getCached<T>(key: string): T | null {
 
 function setCache<T>(key: string, data: T): void {
   try {
-    localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
-  } catch {}
+    localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() }));
+  } catch {
+    // ignore quota errors
+  }
 }
 
 // If the requested season has no data and it's the current year, try the previous year.
-const withYearFallback = <T>(fn: (season: number) => Promise<T | null>, season: number): Promise<T | null> => {
+const withYearFallback = <T>(
+  fn: (season: number) => Promise<T | null>,
+  season: number
+): Promise<T | null> => {
   if (season === currentYear()) return fn(season - 1);
   return Promise.resolve(null);
 };
@@ -61,7 +75,10 @@ const transformRace = (race: Record<string, unknown>): Race => {
   };
 };
 
-const transformStanding = (standing: Record<string, unknown>, season: number): DriverStanding => {
+const transformStanding = (
+  standing: Record<string, unknown>,
+  season: number
+): DriverStanding => {
   const driver = standing.Driver as Record<string, unknown>;
   const constructors = standing.Constructors as Record<string, unknown>[];
   return {
@@ -82,8 +99,78 @@ const transformStanding = (standing: Record<string, unknown>, season: number): D
   };
 };
 
-export const getDriverStandings = async (season = currentYear()): Promise<DriverStanding[] | null> => {
-  const cacheKey = `f1_standings_${season}`;
+// Shared race result transformer used by getLastRaceResults and getRaceResults
+export const transformLastRace = (
+  race: Record<string, unknown>
+): LastRaceData => {
+  const circuit = race.Circuit as Record<string, unknown>;
+  const location = circuit.Location as Record<string, unknown>;
+  const results = race.Results as Record<string, unknown>[];
+  return {
+    season: parseInt(race.season as string),
+    round: parseInt(race.round as string),
+    raceName: race.raceName as string,
+    date: race.date as string,
+    Circuit: {
+      circuitId: circuit.circuitId as string,
+      circuitName: circuit.circuitName as string,
+      Location: {
+        locality: location.locality as string,
+        country: location.country as string,
+      },
+    },
+    results: results.map((result) => {
+      const driver = result.Driver as Record<string, unknown>;
+      const constructor_ = result.Constructor as Record<string, unknown>;
+      const time = result.Time as Record<string, unknown> | null | undefined;
+      const fastestLap = result.FastestLap as
+        | Record<string, unknown>
+        | null
+        | undefined;
+      return {
+        position: result.position as string,
+        Driver: {
+          givenName: driver.givenName as string,
+          familyName: driver.familyName as string,
+          code: driver.code as string,
+        },
+        Constructor: { name: constructor_.name as string },
+        grid: result.grid as string,
+        laps: result.laps as string,
+        status: result.status as string,
+        Time: time ? { time: time.time as string } : null,
+        FastestLap: fastestLap
+          ? {
+              rank: fastestLap.rank as string,
+              lap: fastestLap.lap as string,
+              Time: fastestLap.Time
+                ? {
+                    time: (fastestLap.Time as Record<string, unknown>)
+                      .time as string,
+                  }
+                : null,
+              AverageSpeed: fastestLap.AverageSpeed
+                ? {
+                    speed: (
+                      fastestLap.AverageSpeed as Record<string, unknown>
+                    ).speed as string,
+                    units: (
+                      fastestLap.AverageSpeed as Record<string, unknown>
+                    ).units as string,
+                  }
+                : null,
+            }
+          : null,
+        points: result.points as string,
+      };
+    }),
+  };
+};
+
+export const getDriverStandings = async (
+  season = currentYear()
+): Promise<DriverStanding[] | null> => {
+  const cacheKey = `f1_standings_driver_${season}`;
   const cached = getCached<DriverStanding[]>(cacheKey);
   if (cached) return cached;
 
@@ -95,7 +182,9 @@ export const getDriverStandings = async (season = currentYear()): Promise<Driver
       response.data?.MRData?.StandingsTable?.StandingsLists?.[0]
         ?.DriverStandings;
     if (standings?.length > 0) {
-      const mapped: DriverStanding[] = standings.map((s: Record<string, unknown>) => transformStanding(s, season));
+      const mapped: DriverStanding[] = standings.map(
+        (s: Record<string, unknown>) => transformStanding(s, season)
+      );
       setCache(cacheKey, mapped);
       return mapped;
     }
@@ -137,7 +226,9 @@ const fetchRaceScheduleRaw = async (season: number): Promise<Race[] | null> => {
   return null;
 };
 
-export const getRaceSchedule = async (season = currentYear()): Promise<Race[] | null> => {
+export const getRaceSchedule = async (
+  season = currentYear()
+): Promise<Race[] | null> => {
   const cacheKey = `f1_schedule_${season}`;
   const cached = getCached<Race[]>(cacheKey);
   if (cached) return cached;
@@ -154,8 +245,10 @@ export const getRaceSchedule = async (season = currentYear()): Promise<Race[] | 
   }
 };
 
-export const getLastRaceResults = async (season = currentYear()): Promise<LastRaceData | null> => {
-  const cacheKey = `f1_last_results_${season}`;
+export const getLastRaceResults = async (
+  season = currentYear()
+): Promise<LastRaceData | null> => {
+  const cacheKey = `f1_last_race_${season}`;
   const cached = getCached<LastRaceData>(cacheKey);
   if (cached) return cached;
 
@@ -168,90 +261,110 @@ export const getLastRaceResults = async (season = currentYear()): Promise<LastRa
     if (!race?.Results?.length)
       return withYearFallback(getLastRaceResults, season);
 
-    const mapped: LastRaceData = {
-      season: parseInt(race.season),
-      round: parseInt(race.round),
-      raceName: race.raceName,
-      date: race.date,
-      Circuit: {
-        circuitId: race.Circuit.circuitId,
-        circuitName: race.Circuit.circuitName,
-        Location: {
-          locality: race.Circuit.Location.locality,
-          country: race.Circuit.Location.country,
-        },
-      },
-      results: race.Results.map((result: Record<string, unknown>) => {
-        const driver = result.Driver as Record<string, unknown>;
-        const constructor_ = result.Constructor as Record<string, unknown>;
-        const time = result.Time as Record<string, unknown> | null | undefined;
-        const fastestLap = result.FastestLap as Record<string, unknown> | null | undefined;
-        return {
-          position: result.position as string,
-          Driver: {
-            givenName: driver.givenName as string,
-            familyName: driver.familyName as string,
-            code: driver.code as string,
-          },
-          Constructor: { name: constructor_.name as string },
-          grid: result.grid as string,
-          laps: result.laps as string,
-          status: result.status as string,
-          Time: time ? { time: time.time as string } : null,
-          FastestLap: fastestLap
-            ? {
-                rank: fastestLap.rank as string,
-                lap: fastestLap.lap as string,
-                Time: fastestLap.Time
-                  ? { time: (fastestLap.Time as Record<string, unknown>).time as string }
-                  : null,
-                AverageSpeed: fastestLap.AverageSpeed
-                  ? {
-                      speed: (fastestLap.AverageSpeed as Record<string, unknown>).speed as string,
-                      units: (fastestLap.AverageSpeed as Record<string, unknown>).units as string,
-                    }
-                  : null,
-              }
-            : null,
-          points: result.points as string,
-        };
-      }),
-    };
-
-    setCache(cacheKey, mapped);
-    return mapped;
+    const data = transformLastRace(race);
+    setCache(cacheKey, data);
+    return data;
   } catch {
     return withYearFallback(getLastRaceResults, season);
   }
 };
 
-export const getConstructorStandings = async (season = currentYear()): Promise<ConstructorStanding[] | null> => {
-  const cacheKey = `f1_constructor_standings_${season}`;
+export const getConstructorStandings = async (
+  season = currentYear()
+): Promise<ConstructorStanding[] | null> => {
+  const cacheKey = `f1_standings_constructor_${season}`;
   const cached = getCached<ConstructorStanding[]>(cacheKey);
   if (cached) return cached;
 
   try {
-    const response = await jolpicaInstance.get(`f1/${season}/constructorStandings.json`);
-    const standings = response.data?.MRData?.StandingsTable?.StandingsLists?.[0]?.ConstructorStandings;
+    const response = await jolpicaInstance.get(
+      `f1/${season}/constructorStandings.json`
+    );
+    const standings =
+      response.data?.MRData?.StandingsTable?.StandingsLists?.[0]
+        ?.ConstructorStandings;
     if (standings?.length > 0) {
-      const mapped: ConstructorStanding[] = standings.map((s: Record<string, unknown>) => {
-        const constructor_ = s.Constructor as Record<string, unknown>;
-        return {
-          position: parseInt(s.position as string),
-          points: parseFloat(s.points as string),
-          wins: parseInt(s.wins as string),
-          Constructor: {
-            constructorId: constructor_.constructorId as string,
-            name: constructor_.name as string,
-          },
-          season,
-        };
-      });
+      const mapped: ConstructorStanding[] = standings.map(
+        (s: Record<string, unknown>) => {
+          const constructor_ = s.Constructor as Record<string, unknown>;
+          return {
+            position: parseInt(s.position as string),
+            points: parseFloat(s.points as string),
+            wins: parseInt(s.wins as string),
+            Constructor: {
+              constructorId: constructor_.constructorId as string,
+              name: constructor_.name as string,
+              nationality: constructor_.nationality as string | undefined,
+            },
+            season,
+          };
+        }
+      );
       setCache(cacheKey, mapped);
       return mapped;
     }
     return withYearFallback(getConstructorStandings, season);
   } catch {
     return withYearFallback(getConstructorStandings, season);
+  }
+};
+
+export const getRaceResults = async (
+  season: number,
+  round: number
+): Promise<LastRaceData | null> => {
+  const cacheKey = `f1_race_${season}_${round}`;
+  const cached = getCached<LastRaceData>(cacheKey);
+  if (cached) return cached;
+  try {
+    const res = await jolpicaInstance.get(
+      `f1/${season}/${round}/results.json`
+    );
+    const race = res.data?.MRData?.RaceTable?.Races?.[0];
+    if (!race?.Results?.length) return null;
+    const data = transformLastRace(race);
+    setCache(cacheKey, data);
+    return data;
+  } catch {
+    return null;
+  }
+};
+
+export const getQualifyingResults = async (
+  season: number,
+  round: number
+): Promise<QualifyingResult[] | null> => {
+  const cacheKey = `f1_quali_${season}_${round}`;
+  const cached = getCached<QualifyingResult[]>(cacheKey);
+  if (cached) return cached;
+  try {
+    const res = await jolpicaInstance.get(
+      `f1/${season}/${round}/qualifying.json`
+    );
+    const results =
+      res.data?.MRData?.RaceTable?.Races?.[0]?.QualifyingResults;
+    if (!results?.length) return null;
+    const mapped: QualifyingResult[] = (
+      results as Record<string, unknown>[]
+    ).map((r) => {
+      const driver = r.Driver as Record<string, unknown>;
+      const constructor_ = r.Constructor as Record<string, unknown>;
+      return {
+        position: r.position as string,
+        Driver: {
+          givenName: driver.givenName as string,
+          familyName: driver.familyName as string,
+          code: driver.code as string,
+        },
+        Constructor: { name: constructor_.name as string },
+        Q1: (r.Q1 as string) || "—",
+        Q2: r.Q2 as string | undefined,
+        Q3: r.Q3 as string | undefined,
+      };
+    });
+    setCache(cacheKey, mapped);
+    return mapped;
+  } catch {
+    return null;
   }
 };
