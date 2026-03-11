@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 import "./App.css";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -45,6 +46,7 @@ function App() {
             </Suspense>
           </main>
           <Footer />
+          <Analytics />
         </div>
       </SeasonProvider>
     </BrowserRouter>
