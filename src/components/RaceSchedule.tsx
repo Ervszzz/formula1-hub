@@ -47,6 +47,32 @@ const RaceSchedule = ({ fullPage }: RaceScheduleProps) => {
     return () => clearInterval(interval);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const nextRace = races ? getNextRace(races) : null;
+
+  const getRaceDateTime = (race: Race) =>
+    race.time ? new Date(`${race.date}T${race.time}`) : new Date(race.date);
+
+  const calcTimeLeft = (race: Race) => {
+    const diff = getRaceDateTime(race).getTime() - Date.now();
+    if (diff <= 0) return null;
+    return {
+      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((diff / (1000 * 60)) % 60),
+      seconds: Math.floor((diff / 1000) % 60),
+    };
+  };
+
+  const [timeLeft, setTimeLeft] = useState(nextRace ? calcTimeLeft(nextRace) : null);
+
+  useEffect(() => {
+    if (!nextRace) return;
+    const tick = () => setTimeLeft(calcTimeLeft(nextRace));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [nextRace?.round]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const currentYear = new Date().getFullYear();
   const seasonYear = races?.[0]?.season ?? season;
   const prevSeasonNote =
@@ -118,34 +144,7 @@ const RaceSchedule = ({ fullPage }: RaceScheduleProps) => {
       </section>
     );
 
-  const nextRace = getNextRace(races);
-  const groupedRaces = groupRacesByMonth(races);
-
-  const getRaceDateTime = (race: Race) => {
-    if (race.time) return new Date(`${race.date}T${race.time}`);
-    return new Date(race.date);
-  };
-
-  const calcTimeLeft = (race: Race) => {
-    const diff = getRaceDateTime(race).getTime() - Date.now();
-    if (diff <= 0) return null;
-    return {
-      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-      hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-      minutes: Math.floor((diff / (1000 * 60)) % 60),
-      seconds: Math.floor((diff / 1000) % 60),
-    };
-  };
-
-  const [timeLeft, setTimeLeft] = useState(nextRace ? calcTimeLeft(nextRace) : null);
-
-  useEffect(() => {
-    if (!nextRace) return;
-    const tick = () => setTimeLeft(calcTimeLeft(nextRace));
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [nextRace?.round]); // eslint-disable-line react-hooks/exhaustive-deps
+  const groupedRaces = groupRacesByMonth(races ?? []);
 
   return (
     <section id="schedule" className={fullPage ? "" : "h-full sticky top-24"}>
