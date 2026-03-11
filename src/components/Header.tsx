@@ -8,12 +8,13 @@ const SEASON_YEARS = Array.from(
   (_, i) => CURRENT_YEAR - i
 );
 
-const NAV_ITEMS = [
+const NAV_ITEMS: { name: string; path: string; live?: boolean }[] = [
   { name: "HOME", path: "/" },
   { name: "STANDINGS", path: "/standings" },
   { name: "CONSTRUCTORS", path: "/constructors" },
   { name: "SCHEDULE", path: "/schedule" },
   { name: "RESULTS", path: "/results" },
+  { name: "RACE WEEKEND", path: "/race-weekend", live: true },
 ];
 
 const Header = () => {
@@ -87,7 +88,12 @@ const Header = () => {
             >
               {({ isActive }) => (
                 <>
-                  <span className="relative z-10">{item.name}</span>
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    {item.name}
+                    {item.live && (
+                      <span className="w-1.5 h-1.5 bg-red-500 rounded-full tech-pulse" />
+                    )}
+                  </span>
                   <span
                     className={`absolute bottom-0 left-0 h-px bg-red-500 transition-all duration-300 ${
                       isActive ? "w-full" : "w-0 group-hover:w-full"
@@ -164,7 +170,7 @@ const Header = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`px-4 py-3 tech-text text-sm tracking-wider transition-colors duration-200 data-line ${
+                className={`px-4 py-3 tech-text text-sm tracking-wider transition-colors duration-200 data-line flex items-center gap-1.5 ${
                   location.pathname === item.path
                     ? "text-red-500"
                     : "hover:text-red-500"
@@ -172,6 +178,9 @@ const Header = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 {item.name}
+                {item.live && (
+                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full tech-pulse" />
+                )}
               </Link>
             ))}
             {/* Mobile season selector */}
