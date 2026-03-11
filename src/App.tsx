@@ -12,6 +12,7 @@ const Constructors = lazy(() => import("./pages/Constructors"));
 const Schedule = lazy(() => import("./pages/Schedule"));
 const Results = lazy(() => import("./pages/Results"));
 const RaceDetail = lazy(() => import("./pages/RaceDetail"));
+const RaceWeekend = lazy(() => import("./pages/RaceWeekend"));
 
 // Full-page loading skeleton shown while lazy chunks load
 const PageSkeleton = () => (
@@ -41,6 +42,7 @@ function App() {
                 <Route path="/schedule" element={<Schedule />} />
                 <Route path="/results" element={<Results />} />
                 <Route path="/race/:season/:round" element={<RaceDetail />} />
+                <Route path="/race-weekend" element={<RaceWeekend />} />
               </Routes>
             </Suspense>
           </main>
