@@ -48,7 +48,7 @@ const Dashboard = () => {
               <div className="h-px w-16 bg-gradient-to-l from-transparent to-red-500/50"></div>
             </div>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Real-time Formula 1 data interface. Access race telemetry, driver
+              Formula 1 data & statistics interface. Access race results, driver
               statistics, and circuit analytics.
             </p>
           </div>
