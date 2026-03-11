@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getRaceSchedule } from "../api/f1Service";
 import { useFetchData } from "../hooks/useFetchData";
@@ -121,6 +121,32 @@ const RaceSchedule = ({ fullPage }: RaceScheduleProps) => {
   const nextRace = getNextRace(races);
   const groupedRaces = groupRacesByMonth(races);
 
+  const getRaceDateTime = (race: Race) => {
+    if (race.time) return new Date(`${race.date}T${race.time}`);
+    return new Date(race.date);
+  };
+
+  const calcTimeLeft = (race: Race) => {
+    const diff = getRaceDateTime(race).getTime() - Date.now();
+    if (diff <= 0) return null;
+    return {
+      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((diff / (1000 * 60)) % 60),
+      seconds: Math.floor((diff / 1000) % 60),
+    };
+  };
+
+  const [timeLeft, setTimeLeft] = useState(nextRace ? calcTimeLeft(nextRace) : null);
+
+  useEffect(() => {
+    if (!nextRace) return;
+    const tick = () => setTimeLeft(calcTimeLeft(nextRace));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [nextRace?.round]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <section id="schedule" className={fullPage ? "" : "h-full sticky top-24"}>
       <SectionHeader />
@@ -176,6 +202,34 @@ const RaceSchedule = ({ fullPage }: RaceScheduleProps) => {
                 {nextRace.Circuit.Location.country}
               </span>
             </div>
+
+            {timeLeft && (
+              <div className="mt-4 pt-4 border-t border-red-500/20">
+                <div className="tech-text text-xs text-gray-500 tracking-wider mb-2">
+                  RACE STARTS IN
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { value: timeLeft.days, label: "DAYS" },
+                    { value: timeLeft.hours, label: "HRS" },
+                    { value: timeLeft.minutes, label: "MIN" },
+                    { value: timeLeft.seconds, label: "SEC" },
+                  ].map(({ value, label }) => (
+                    <div
+                      key={label}
+                      className="flex flex-col items-center border border-red-500/20 bg-black/40 py-2"
+                    >
+                      <span className="tech-text text-red-500 text-xl font-bold tabular-nums">
+                        {String(value).padStart(2, "0")}
+                      </span>
+                      <span className="tech-text text-gray-500 text-[9px] tracking-widest mt-0.5">
+                        {label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
