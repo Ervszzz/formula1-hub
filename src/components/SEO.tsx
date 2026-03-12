@@ -7,11 +7,11 @@ interface SEOProps {
 }
 
 const BASE_URL = 'https://formula1-hub.vercel.app';
-const DEFAULT_TITLE = 'F1Pulse — Real-Time Formula 1 Data Dashboard';
-const DEFAULT_DESC = 'Live driver standings, race schedule, results, constructor standings and live timing for Formula 1.';
+const DEFAULT_TITLE = 'F1Pulse — Formula 1 Data & Statistics';
+const DEFAULT_DESC = 'Formula 1 data & statistics interface. Access race results, driver statistics, and circuit analytics.';
 
 const SEO = ({ title, description, path = '' }: SEOProps) => {
-  const fullTitle = title ? `${title} | F1Pulse` : DEFAULT_TITLE;
+  const fullTitle = title ? `${title} — F1Pulse` : DEFAULT_TITLE;
   const desc = description ?? DEFAULT_DESC;
   const url = `${BASE_URL}${path}`;
 
