@@ -244,7 +244,7 @@ const RaceSchedule = ({ fullPage }: RaceScheduleProps) => {
               </h3>
               <div className="space-y-2">
                 {monthRaces.map((race) => {
-                  const past = isPastRace(race.date);
+                  const past = isPastRace(race.date, race.time);
                   const inner = (
                     <div
                       className={`p-3 flex items-center ${

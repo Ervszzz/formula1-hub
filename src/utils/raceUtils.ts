@@ -33,10 +33,13 @@ export const formatTime = (dateString: string | undefined, timeString: string | 
   }
 };
 
-export const isPastRace = (dateString: string | undefined): boolean => {
+const raceDateTime = (dateString: string, timeString?: string): Date =>
+  timeString ? new Date(`${dateString}T${timeString}`) : new Date(dateString);
+
+export const isPastRace = (dateString: string | undefined, timeString?: string): boolean => {
   if (!dateString) return false;
   try {
-    return new Date(dateString) < new Date();
+    return raceDateTime(dateString, timeString) < new Date();
   } catch {
     return false;
   }
@@ -48,8 +51,8 @@ export const getDaysUntilRace = (raceDate: string): number => {
 };
 
 export const getNextRace = (races: Race[]): Race | null => {
-  const today = new Date();
-  return races.find((race) => new Date(race.date) > today) ?? null;
+  const now = new Date();
+  return races.find((race) => raceDateTime(race.date, race.time) > now) ?? null;
 };
 
 export const groupRacesByMonth = (races: Race[]): Record<string, Race[]> =>
