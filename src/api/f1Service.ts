@@ -56,7 +56,7 @@ const withYearFallback = <T>(
 
 const transformRace = (race: Record<string, unknown>): Race => {
   const circuit = race.Circuit as Record<string, unknown>;
-  const location = circuit.Location as Record<string, unknown>;
+  const location = circuit?.Location as Record<string, unknown> | undefined;
   return {
     season: parseInt(race.season as string),
     round: parseInt(race.round as string),
@@ -66,10 +66,12 @@ const transformRace = (race: Record<string, unknown>): Race => {
     Circuit: {
       circuitId: circuit.circuitId as string,
       circuitName: circuit.circuitName as string,
-      Location: {
-        locality: location.locality as string,
-        country: location.country as string,
-      },
+      Location: location
+        ? {
+            locality: location.locality as string | undefined,
+            country: location.country as string | undefined,
+          }
+        : undefined,
     },
     hasSprint: !!race.Sprint,
   };

@@ -23,9 +23,7 @@ const validateRaces = (races: Race[]): boolean =>
       r?.round &&
       r?.raceName &&
       r?.date &&
-      r?.Circuit?.circuitName &&
-      r?.Circuit?.Location?.locality &&
-      r?.Circuit?.Location?.country
+      r?.Circuit?.circuitName
   );
 
 interface RaceScheduleProps {
@@ -196,9 +194,9 @@ const RaceSchedule = ({ fullPage }: RaceScheduleProps) => {
                 />
               </svg>
               <span className="tech-text text-xs tracking-wider">
-                {nextRace.Circuit.circuitName},{" "}
-                {nextRace.Circuit.Location.locality},{" "}
-                {nextRace.Circuit.Location.country}
+                {nextRace.Circuit.circuitName}
+                {nextRace.Circuit.Location?.locality ? `, ${nextRace.Circuit.Location.locality}` : ""}
+                {nextRace.Circuit.Location?.country ? `, ${nextRace.Circuit.Location.country}` : ""}
               </span>
             </div>
 
