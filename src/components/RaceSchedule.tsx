@@ -17,14 +17,7 @@ import type { Race } from "../types/f1";
 const validateRaces = (races: Race[]): boolean =>
   Array.isArray(races) &&
   races.length > 0 &&
-  races.every(
-    (r) =>
-      r?.season &&
-      r?.round &&
-      r?.raceName &&
-      r?.date &&
-      r?.Circuit?.circuitName
-  );
+  races.every((r) => r?.season && r?.raceName && r?.date && r?.Circuit?.circuitName);
 
 interface RaceScheduleProps {
   fullPage?: boolean;

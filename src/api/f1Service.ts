@@ -198,11 +198,17 @@ export const getDriverStandings = async (
 
 // Tries axios first, then iterates through fallback URLs (proxy → direct).
 const fetchRaceScheduleRaw = async (season: number): Promise<Race[] | null> => {
+  const toRaces = (raw: Record<string, unknown>[]) =>
+    raw
+      .filter((r) => r.round != null)
+      .map((r) => transformRace(r));
+
   try {
     const response = await jolpicaInstance.get(`f1/${season}.json`);
     const races = response.data?.MRData?.RaceTable?.Races;
     if (races?.length > 0) {
-      return races.map((r: Record<string, unknown>) => transformRace(r));
+      const mapped = toRaces(races);
+      if (mapped.length > 0) return mapped;
     }
   } catch (_) {}
 
@@ -220,7 +226,8 @@ const fetchRaceScheduleRaw = async (season: number): Promise<Race[] | null> => {
       const data = await res.json();
       const races = data?.MRData?.RaceTable?.Races;
       if (races?.length > 0) {
-        return races.map((r: Record<string, unknown>) => transformRace(r));
+        const mapped = toRaces(races);
+        if (mapped.length > 0) return mapped;
       }
     } catch (_) {}
   }
