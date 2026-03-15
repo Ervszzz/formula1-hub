@@ -238,7 +238,11 @@ export const getRaceSchedule = async (
 ): Promise<Race[] | null> => {
   const cacheKey = `f1_schedule_${season}`;
   const cached = getCached<Race[]>(cacheKey);
-  if (cached) return cached;
+  if (cached) {
+    const valid = cached.filter((r) => r.round != null && !isNaN(r.round));
+    if (valid.length > 0) return valid;
+    localStorage.removeItem(cacheKey);
+  }
 
   try {
     const races = await fetchRaceScheduleRaw(season);
