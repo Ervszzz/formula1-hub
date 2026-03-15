@@ -21,14 +21,14 @@ export interface DriverStanding {
 }
 
 export interface CircuitLocation {
-  locality: string;
-  country: string;
+  locality?: string;
+  country?: string;
 }
 
 export interface Circuit {
   circuitId: string;
   circuitName: string;
-  Location: CircuitLocation;
+  Location?: CircuitLocation;
 }
 
 export interface Race {
